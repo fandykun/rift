@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Rift DB - Migration Editor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-container": "#3e2400",
+                        "inverse-on-surface": "#2e3038",
+                        "on-secondary-fixed": "#002113",
+                        "on-secondary-fixed-variant": "#005236",
+                        "on-primary-container": "#00285d",
+                        "outline-variant": "#424754",
+                        "surface-container": "#1d2027",
+                        "on-error": "#690005",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "on-tertiary-fixed": "#2a1700",
+                        "inverse-primary": "#005ac2",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-surface": "#e1e2ec",
+                        "surface-container-high": "#272a31",
+                        "on-primary": "#002e6a",
+                        "tertiary-fixed": "#ffddb8",
+                        "on-tertiary": "#472a00",
+                        "surface-variant": "#32353c",
+                        "surface-bright": "#363941",
+                        "inverse-surface": "#e1e2ec",
+                        "on-background": "#e1e2ec",
+                        "surface-dim": "#10131a",
+                        "primary-container": "#4d8eff",
+                        "on-secondary-container": "#00311f",
+                        "error": "#ffb4ab",
+                        "on-secondary": "#003824",
+                        "primary-fixed": "#d8e2ff",
+                        "tertiary-container": "#ca8100",
+                        "tertiary": "#ffb95f",
+                        "on-primary-fixed": "#001a42",
+                        "surface-container-low": "#191b23",
+                        "outline": "#8c909f",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "on-primary-fixed-variant": "#004395",
+                        "surface-tint": "#adc6ff",
+                        "error-container": "#93000a",
+                        "primary-fixed-dim": "#adc6ff",
+                        "background": "#10131a",
+                        "secondary-container": "#00a572",
+                        "surface-container-lowest": "#0b0e15",
+                        "surface-container-highest": "#32353c",
+                        "secondary": "#4edea3",
+                        "secondary-fixed-dim": "#4edea3",
+                        "surface": "#10131a",
+                        "on-surface-variant": "#c2c6d6",
+                        "primary": "#adc6ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "container-max": "1440px",
+                        "base": "4px",
+                        "sidebar-width": "240px",
+                        "unit-8": "2rem",
+                        "unit-1": "0.25rem",
+                        "unit-2": "0.5rem",
+                        "gutter": "1rem",
+                        "unit-6": "1.5rem",
+                        "unit-4": "1rem"
+                    },
+                    "fontFamily": {
+                        "display": ["Geist", "sans-serif"],
+                        "headline-md": ["Geist", "sans-serif"],
+                        "headline-sm": ["Geist", "sans-serif"],
+                        "code-md": ["JetBrains Mono", "monospace"],
+                        "label-caps": ["JetBrains Mono", "monospace"],
+                        "body-lg": ["Inter", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "code-sm": ["JetBrains Mono", "monospace"]
+                    },
+                    "fontSize": {
+                        "display": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "headline-sm": ["18px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                        "code-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "label-caps": ["11px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "code-sm": ["12px", { "lineHeight": "1.4", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        /* Custom scrollbar for pro feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #10131a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #32353c; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #424754; 
+        }
+
+        /* Syntax Highlighting specific to SQL */
+        .sql-keyword { color: #adc6ff; font-weight: 600; } /* primary */
+        .sql-table { color: #4edea3; } /* secondary */
+        .sql-type { color: #ffb95f; } /* tertiary */
+        .sql-string { color: #00a572; } /* secondary-container */
+        .sql-comment { color: #8c909f; font-style: italic; } /* outline */
+        .sql-operator { color: #c2c6d6; } /* on-surface-variant */
+    </style>
+</head>
+<body class="bg-background text-on-background overflow-hidden flex h-screen antialiased">
+<!-- SideNavBar Component -->
+<nav class="bg-surface-container text-primary font-body-md text-body-md docked fixed left-0 h-full w-sidebar-width border-r border-outline-variant flex flex-col py-unit-4 z-20 transition-all duration-300">
+<!-- Header -->
+<div class="px-unit-4 mb-unit-8 flex items-center gap-unit-2">
+<div class="w-8 h-8 rounded bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="database">database</span>
+</div>
+<div>
+<h1 class="font-display text-headline-sm font-bold text-on-background">Rift DB</h1>
+<p class="font-code-sm text-code-sm text-on-surface-variant">PostgreSQL Instance</p>
+</div>
+</div>
+<!-- CTA -->
+<div class="px-unit-4 mb-unit-6">
+<button class="w-full bg-primary text-on-primary py-2 px-4 rounded font-body-md text-body-md font-semibold flex items-center justify-center gap-2 hover:bg-primary-fixed transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                New Migration
+            </button>
+</div>
+<!-- Tabs -->
+<div class="flex-1 overflow-y-auto px-unit-2 space-y-1">
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined group-hover:text-on-surface transition-colors" data-icon="dashboard">dashboard</span>
+                Dashboard
+            </a>
+<!-- Active -->
+<a class="flex items-center gap-3 px-3 py-2 rounded text-primary bg-primary-container/10 border-r-2 border-primary cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined icon-fill" data-icon="database_line">database_off</span>
+                Migrations
+            </a>
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined group-hover:text-on-surface transition-colors" data-icon="difference">difference</span>
+                Schema Diff
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined group-hover:text-on-surface transition-colors" data-icon="group">group</span>
+                Team
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined group-hover:text-on-surface transition-colors" data-icon="settings">settings</span>
+                Settings
+            </a>
+</div>
+<!-- Footer Tabs -->
+<div class="mt-auto px-unit-2 pt-unit-4 space-y-1 border-t border-outline-variant/30 mx-2">
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined text-sm group-hover:text-on-surface transition-colors" data-icon="description">description</span>
+                Docs
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95 group" href="#">
+<span class="material-symbols-outlined text-sm group-hover:text-on-surface transition-colors" data-icon="help">help</span>
+                Support
+            </a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="ml-sidebar-width flex-1 flex flex-col h-full bg-background relative">
+<!-- TopAppBar Component -->
+<header class="bg-background text-primary font-label-caps text-label-caps docked full-width top-0 sticky border-b border-outline-variant flex justify-between items-center h-14 px-gutter z-10 duration-200 ease-in-out">
+<div class="flex items-center gap-unit-6">
+<!-- Branding is handled in Sidebar, but TopNav has links -->
+<nav class="hidden md:flex items-center gap-unit-4">
+<a class="text-on-surface-variant hover:text-on-surface transition-opacity py-2" href="#">Docs</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-opacity py-2" href="#">API</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-opacity py-2" href="#">Changelog</a>
+</nav>
+</div>
+<div class="flex items-center gap-unit-4">
+<!-- Actions -->
+<button class="font-label-caps text-label-caps text-primary border border-primary/50 hover:bg-primary/10 px-4 py-1.5 rounded transition-colors hidden sm:block">
+                    Preview Changes
+                </button>
+<button class="font-label-caps text-label-caps bg-primary text-on-primary px-4 py-1.5 rounded hover:bg-primary-fixed transition-colors shadow-sm">
+                    Apply Migrations
+                </button>
+<!-- Icon Actions -->
+<div class="flex items-center gap-2 border-l border-outline-variant pl-4 ml-2">
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface rounded hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="notifications">notifications</span>
+</button>
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface rounded hover:bg-surface-variant transition-colors flex items-center">
+<span class="material-symbols-outlined text-2xl" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Workspace Flex Layout -->
+<main class="flex-1 flex overflow-hidden">
+<!-- Left Panel: Table Browser -->
+<aside class="w-64 border-r border-outline-variant bg-surface-container-low flex flex-col shrink-0">
+<div class="h-10 border-b border-outline-variant flex items-center px-4 shrink-0 bg-surface-container/50">
+<span class="font-label-caps text-label-caps text-on-surface-variant tracking-wider">Available Schemas</span>
+</div>
+<!-- Search -->
+<div class="p-3 border-b border-outline-variant/50 shrink-0">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-2 top-1.5 text-outline text-sm" data-icon="search">search</span>
+<input class="w-full bg-surface-container border border-outline-variant rounded py-1 pl-8 pr-2 text-sm font-body-md text-on-surface placeholder:text-outline focus:border-primary focus:ring-1 focus:ring-primary transition-shadow bg-surface-dim shadow-inner h-8" placeholder="Filter tables..." type="text"/>
+</div>
+</div>
+<!-- Tree View -->
+<div class="flex-1 overflow-y-auto p-2 font-code-sm text-code-sm">
+<!-- Schema: public -->
+<div class="mb-2">
+<div class="flex items-center gap-2 py-1 px-2 rounded hover:bg-surface-variant cursor-pointer text-on-surface">
+<span class="material-symbols-outlined text-sm text-outline" data-icon="folder_open">folder_open</span>
+<span class="font-bold">public</span>
+</div>
+<div class="pl-6 pt-1 space-y-1">
+<div class="flex items-center gap-2 py-1 px-2 rounded bg-primary-container/5 text-primary cursor-pointer">
+<span class="material-symbols-outlined text-sm" data-icon="table_chart">table_chart</span>
+<span>users</span>
+</div>
+<div class="flex items-center gap-2 py-1 px-2 rounded hover:bg-surface-variant text-on-surface-variant cursor-pointer">
+<span class="material-symbols-outlined text-sm" data-icon="table_chart">table_chart</span>
+<span>organizations</span>
+</div>
+<div class="flex items-center gap-2 py-1 px-2 rounded hover:bg-surface-variant text-on-surface-variant cursor-pointer">
+<span class="material-symbols-outlined text-sm" data-icon="table_chart">table_chart</span>
+<span>projects</span>
+</div>
+<div class="flex items-center gap-2 py-1 px-2 rounded hover:bg-surface-variant text-on-surface-variant cursor-pointer">
+<span class="material-symbols-outlined text-sm" data-icon="table_chart">table_chart</span>
+<span>audit_logs</span>
+</div>
+</div>
+</div>
+<!-- Schema: auth -->
+<div>
+<div class="flex items-center gap-2 py-1 px-2 rounded hover:bg-surface-variant cursor-pointer text-on-surface-variant">
+<span class="material-symbols-outlined text-sm text-outline" data-icon="folder">folder</span>
+<span class="font-bold">auth</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Center Panel: Editor -->
+<section class="flex-1 flex flex-col min-w-0 bg-surface-dim relative">
+<!-- Metadata Strip -->
+<div class="h-14 border-b border-outline-variant bg-surface-container flex items-center px-4 gap-4 shrink-0 shadow-sm z-10">
+<div class="flex-1 flex items-center gap-2">
+<span class="font-label-caps text-label-caps text-outline w-16">Name</span>
+<input class="flex-1 bg-transparent border-none focus:ring-0 font-code-md text-code-md text-on-surface p-0" type="text" value="20231025_add_role_id_to_users.sql"/>
+</div>
+<div class="w-px h-6 bg-outline-variant"></div>
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-label-caps text-outline">Category</span>
+<select class="bg-surface-container-high border border-outline-variant rounded text-sm font-body-md text-on-surface py-1 pl-2 pr-8 focus:border-primary focus:ring-1 focus:ring-primary h-8">
+<option>Schema Change</option>
+<option>Data Migration</option>
+<option>Index Creation</option>
+</select>
+</div>
+<div class="w-px h-6 bg-outline-variant"></div>
+<div class="flex items-center gap-2">
+<span class="font-label-caps text-label-caps text-outline">Author</span>
+<div class="flex items-center gap-2 bg-surface-container-high px-2 py-1 rounded border border-outline-variant h-8">
+<div class="w-4 h-4 rounded-full bg-tertiary flex items-center justify-center text-[8px] font-bold text-on-tertiary">SJ</div>
+<span class="font-code-sm text-code-sm text-on-surface">system_admin</span>
+</div>
+</div>
+</div>
+<!-- SQL Editor Area -->
+<div class="flex-1 flex overflow-hidden font-code-md text-code-md relative">
+<!-- Line Numbers -->
+<div class="w-12 bg-surface-container-low border-r border-outline-variant/30 flex flex-col items-end py-4 pr-2 text-outline/50 select-none shrink-0 font-code-sm">
+<span>1</span>
+<span>2</span>
+<span class="text-error font-bold bg-error-container/20 w-full text-right block pr-2 -mr-2">3</span>
+<span>4</span>
+<span>5</span>
+<span>6</span>
+<span>7</span>
+</div>
+<!-- Code Area (Simulated) -->
+<div class="flex-1 p-4 overflow-auto whitespace-pre leading-relaxed outline-none" contenteditable="true" spellcheck="false">
+<span class="sql-comment">-- Migration: Add role tracking to users table</span>
+<span class="sql-comment">-- Author: system_admin</span>
+<span class="sql-keyword">ALTER TABLE</span> <span class="sql-table">public.users</span>
+<div class="bg-error-container/10 border-l-2 border-error -ml-4 pl-4 -mr-4 py-0.5"><span class="sql-keyword">ADD COLUMN</span> role_id <span class="sql-type">UUID</span> <span class="sql-keyword">NOT NULL</span>;</div>
+<span class="sql-keyword">CREATE INDEX</span> idx_users_role_id <span class="sql-keyword">ON</span> <span class="sql-table">public.users</span>(role_id);
+
+<span class="sql-keyword">COMMENT ON COLUMN</span> <span class="sql-table">public.users</span>.role_id <span class="sql-keyword">IS</span> <span class="sql-string">'References auth.roles'</span>;
+</div>
+</div>
+</section>
+<!-- Right Panel: Zero-Downtime Linting -->
+<aside class="w-80 border-l border-outline-variant bg-surface-container flex flex-col shrink-0 shadow-[-4px_0_12px_rgba(0,0,0,0.2)] z-10">
+<div class="h-10 border-b border-outline-variant flex items-center justify-between px-4 shrink-0 bg-surface-container/50">
+<span class="font-label-caps text-label-caps text-on-surface-variant tracking-wider flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="fact_check">fact_check</span>
+                        Zero-Downtime Linter
+                    </span>
+<div class="flex items-center gap-1">
+<div class="w-2 h-2 rounded-full bg-error animate-pulse"></div>
+<span class="font-code-sm text-code-sm text-error">1 Issue</span>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-4">
+<!-- Linter Status Card - Error -->
+<div class="bg-surface-container-high border border-error/50 rounded p-3 relative overflow-hidden group">
+<div class="absolute top-0 left-0 w-1 h-full bg-error"></div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-error mt-0.5" data-icon="error">error</span>
+<div class="flex-1">
+<h4 class="font-body-md text-body-md font-semibold text-on-surface mb-1">Breaking Change Detected</h4>
+<p class="font-code-sm text-code-sm text-on-surface-variant mb-2 leading-relaxed">
+                                    Adding a <code class="bg-surface-variant px-1 rounded text-error">NOT NULL</code> column without a <code class="bg-surface-variant px-1 rounded">DEFAULT</code> value requires a table rewrite and takes an exclusive lock.
+                                </p>
+<div class="bg-surface-dim p-2 rounded border border-outline-variant/50 font-code-sm text-code-sm text-outline mb-3">
+                                    Line 3: <span class="text-on-surface">ADD COLUMN role_id UUID NOT NULL</span>
+</div>
+<h5 class="font-label-caps text-label-caps text-secondary mb-1">Suggested Fix:</h5>
+<p class="font-code-sm text-code-sm text-on-surface-variant mb-2">
+                                    Add the column without <code class="bg-surface-variant px-1 rounded text-on-surface">NOT NULL</code>, populate the data, then add the constraint in a separate transaction.
+                                </p>
+<div class="flex gap-2 mt-2">
+<button class="bg-surface-variant hover:bg-outline-variant text-on-surface font-label-caps text-label-caps px-3 py-1.5 rounded transition-colors border border-outline-variant">View Docs</button>
+<button class="bg-error/10 hover:bg-error/20 text-error font-label-caps text-label-caps px-3 py-1.5 rounded transition-colors border border-error/30">Auto-Fix</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Divider -->
+<hr class="border-outline-variant/50"/>
+<!-- Linter Rule Passed -->
+<div class="flex items-start gap-3 p-2 rounded hover:bg-surface-container-high transition-colors opacity-70">
+<span class="material-symbols-outlined text-secondary text-sm mt-0.5" data-icon="check_circle">check_circle</span>
+<div>
+<h4 class="font-body-md text-code-sm text-on-surface">Index Concurrently</h4>
+<p class="font-code-sm text-[10px] text-on-surface-variant mt-0.5">Creating index without CONCURRENTLY locks writes. (Skipped: DB version supports fast indexing for small tables).</p>
+</div>
+</div>
+<!-- Linter Rule Passed -->
+<div class="flex items-start gap-3 p-2 rounded hover:bg-surface-container-high transition-colors opacity-70">
+<span class="material-symbols-outlined text-secondary text-sm mt-0.5" data-icon="check_circle">check_circle</span>
+<div>
+<h4 class="font-body-md text-code-sm text-on-surface">Transaction Wrapping</h4>
+<p class="font-code-sm text-[10px] text-on-surface-variant mt-0.5">Statements are compatible within a single transaction block.</p>
+</div>
+</div>
+</div>
+<!-- Bottom Status -->
+<div class="h-10 border-t border-outline-variant bg-surface-container-lowest flex items-center justify-between px-4 shrink-0">
+<span class="font-code-sm text-code-sm text-outline">Real-time analysis active</span>
+<div class="flex items-center gap-1.5">
+<div class="w-1.5 h-1.5 rounded-full bg-secondary"></div>
+<span class="font-code-sm text-[10px] text-on-surface-variant uppercase tracking-widest">Connected</span>
+</div>
+</div>
+</aside>
+</main>
+</div>
+</body></html>

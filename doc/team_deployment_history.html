@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Team &amp; Deployments - Rift DB</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-container": "#3e2400",
+                        "inverse-on-surface": "#2e3038",
+                        "on-secondary-fixed": "#002113",
+                        "on-secondary-fixed-variant": "#005236",
+                        "on-primary-container": "#00285d",
+                        "outline-variant": "#424754",
+                        "surface-container": "#1d2027",
+                        "on-error": "#690005",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "on-tertiary-fixed": "#2a1700",
+                        "inverse-primary": "#005ac2",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-surface": "#e1e2ec",
+                        "surface-container-high": "#272a31",
+                        "on-primary": "#002e6a",
+                        "tertiary-fixed": "#ffddb8",
+                        "on-tertiary": "#472a00",
+                        "surface-variant": "#32353c",
+                        "surface-bright": "#363941",
+                        "inverse-surface": "#e1e2ec",
+                        "on-background": "#e1e2ec",
+                        "surface-dim": "#10131a",
+                        "primary-container": "#4d8eff",
+                        "on-secondary-container": "#00311f",
+                        "error": "#ffb4ab",
+                        "on-secondary": "#003824",
+                        "primary-fixed": "#d8e2ff",
+                        "tertiary-container": "#ca8100",
+                        "tertiary": "#ffb95f",
+                        "on-primary-fixed": "#001a42",
+                        "surface-container-low": "#191b23",
+                        "outline": "#8c909f",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "on-primary-fixed-variant": "#004395",
+                        "surface-tint": "#adc6ff",
+                        "error-container": "#93000a",
+                        "primary-fixed-dim": "#adc6ff",
+                        "background": "#10131a",
+                        "secondary-container": "#00a572",
+                        "surface-container-lowest": "#0b0e15",
+                        "surface-container-highest": "#32353c",
+                        "secondary": "#4edea3",
+                        "secondary-fixed-dim": "#4edea3",
+                        "surface": "#10131a",
+                        "on-surface-variant": "#c2c6d6",
+                        "primary": "#adc6ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "container-max": "1440px",
+                        "base": "4px",
+                        "sidebar-width": "240px",
+                        "unit-8": "2rem",
+                        "unit-1": "0.25rem",
+                        "unit-2": "0.5rem",
+                        "gutter": "1rem",
+                        "unit-6": "1.5rem",
+                        "unit-4": "1rem"
+                    },
+                    "fontFamily": {
+                        "display": ["Geist", "sans-serif"],
+                        "headline-md": ["Geist", "sans-serif"],
+                        "headline-sm": ["Geist", "sans-serif"],
+                        "code-md": ["JetBrains Mono", "monospace"],
+                        "label-caps": ["JetBrains Mono", "monospace"],
+                        "body-lg": ["Inter", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "code-sm": ["JetBrains Mono", "monospace"]
+                    },
+                    "fontSize": {
+                        "display": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "headline-sm": ["18px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                        "code-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "label-caps": ["11px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "code-sm": ["12px", { "lineHeight": "1.4", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .sql-keyword { color: #c4b5fd; }
+        .sql-string { color: #6ee7b7; }
+        .sql-function { color: #93c5fd; }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen font-body-md antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-sidebar-width bg-surface-container border-r border-outline-variant flex flex-col py-unit-4 z-50 hidden md:flex">
+<div class="px-unit-4 mb-unit-8 flex items-center gap-unit-2">
+<div class="w-8 h-8 rounded bg-primary-container flex items-center justify-center text-on-primary-container" title="Database Icon">
+<span class="material-symbols-outlined text-headline-sm" style="font-variation-settings: 'FILL' 1;">database</span>
+</div>
+<div>
+<h1 class="font-display text-headline-sm font-bold text-primary">Rift DB</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant mt-1">PostgreSQL Instance</p>
+</div>
+</div>
+<nav class="flex-1 px-unit-2 space-y-1">
+<a class="flex items-center gap-unit-2 px-unit-4 py-unit-2 rounded text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95 font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined text-headline-sm">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-unit-2 px-unit-4 py-unit-2 rounded text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95 font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined text-headline-sm">database</span>
+                Migrations
+            </a>
+<a class="flex items-center gap-unit-2 px-unit-4 py-unit-2 rounded text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95 font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined text-headline-sm">difference</span>
+                Schema Diff
+            </a>
+<a class="flex items-center gap-unit-2 px-unit-4 py-unit-2 rounded text-primary bg-primary-container/10 border-r-2 border-primary cursor-pointer active:scale-95 font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined text-headline-sm" style="font-variation-settings: 'FILL' 1;">group</span>
+                Team
+            </a>
+<a class="flex items-center gap-unit-2 px-unit-4 py-unit-2 rounded text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95 font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined text-headline-sm">settings</span>
+                Settings
+            </a>
+</nav>
+<div class="px-unit-4 mb-unit-4">
+<button class="w-full bg-primary text-on-primary font-body-md text-body-md py-unit-2 rounded hover:bg-surface-tint transition-colors cursor-pointer active:scale-95 flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                New Migration
+            </button>
+</div>
+<div class="mt-auto px-unit-2 space-y-1 border-t border-outline-variant pt-unit-4 mx-unit-2">
+<a class="flex items-center gap-unit-2 px-unit-4 py-unit-2 rounded text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95 font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined text-[18px]">description</span>
+                Docs
+            </a>
+<a class="flex items-center gap-unit-2 px-unit-4 py-unit-2 rounded text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95 font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined text-[18px]">help</span>
+                Support
+            </a>
+</div>
+</aside>
+<!-- TopAppBar -->
+<header class="sticky top-0 w-full md:w-[calc(100%-240px)] md:ml-sidebar-width h-14 bg-background border-b border-outline-variant flex justify-between items-center px-gutter z-40">
+<div class="flex items-center gap-unit-6">
+<div class="font-display text-headline-sm font-bold text-on-background md:hidden">Rift</div>
+<div class="hidden md:flex items-center bg-surface-container rounded border border-outline-variant px-unit-2 py-1 w-64 focus-within:border-primary transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px] mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-md font-body-md text-on-surface w-full p-0 placeholder-on-surface-variant" placeholder="Search tables, migrations..." type="text"/>
+</div>
+<nav class="hidden lg:flex items-center gap-unit-4 font-label-caps text-label-caps uppercase">
+<a class="text-on-surface-variant hover:text-on-surface transition-opacity duration-200 ease-in-out" href="#">Docs</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-opacity duration-200 ease-in-out" href="#">API</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-opacity duration-200 ease-in-out" href="#">Changelog</a>
+</nav>
+</div>
+<div class="flex items-center gap-unit-4">
+<div class="hidden sm:flex gap-unit-2">
+<button class="px-unit-4 py-1.5 border border-primary text-primary font-label-caps text-label-caps uppercase rounded hover:bg-primary/10 transition-colors">Preview Changes</button>
+<button class="px-unit-4 py-1.5 bg-primary text-on-primary font-label-caps text-label-caps uppercase rounded hover:bg-surface-tint transition-colors shadow-sm">Apply Migrations</button>
+</div>
+<div class="flex items-center gap-unit-2 text-on-surface-variant">
+<button class="w-8 h-8 flex justify-center items-center rounded hover:bg-surface-variant transition-colors"><span class="material-symbols-outlined">notifications</span></button>
+<button class="w-8 h-8 flex justify-center items-center rounded hover:bg-surface-variant transition-colors" title="User Profile"><span class="material-symbols-outlined">account_circle</span></button>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="w-full md:w-[calc(100%-240px)] md:ml-sidebar-width min-h-[calc(100vh-56px)] p-gutter md:p-unit-8">
+<div class="mb-unit-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h2 class="font-display text-display text-on-surface">Team &amp; Deployment</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Manage team access, monitor deployments, and resolve migration conflicts.</p>
+</div>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-unit-6">
+<!-- Left Column: Deployments & Conflicts -->
+<div class="xl:col-span-8 flex flex-col gap-unit-6">
+<!-- Conflict Detection View -->
+<section class="bg-surface-container rounded border border-error shadow-sm overflow-hidden">
+<div class="p-unit-4 border-b border-error/30 bg-error/5 flex justify-between items-center">
+<div class="flex items-center gap-2 text-error">
+<span class="material-symbols-outlined">warning</span>
+<h3 class="font-headline-sm text-headline-sm">Conflict Detection</h3>
+</div>
+<span class="px-2 py-0.5 rounded text-label-caps font-label-caps uppercase bg-error/20 text-error border border-error/30">1 Conflict Detected</span>
+</div>
+<div class="p-unit-4">
+<div class="bg-surface border border-outline-variant rounded p-unit-4 mb-unit-4">
+<div class="flex justify-between items-start mb-2">
+<div>
+<h4 class="font-body-lg text-body-lg text-on-surface font-semibold">Overlapping DDL on <span class="font-code-md text-code-md bg-surface-variant px-1 rounded">users</span> table</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Migration sequence #0042 is being modified by two active branches.</p>
+</div>
+<button class="px-3 py-1 bg-surface-variant text-on-surface text-code-sm font-code-sm rounded hover:bg-outline-variant transition-colors border border-outline-variant">Resolve manually</button>
+</div>
+<div class="grid grid-cols-2 gap-4 mt-unit-4">
+<div class="border border-outline-variant rounded p-3 bg-surface-dim">
+<div class="flex items-center gap-2 mb-2 text-on-surface-variant text-code-sm font-code-sm">
+<div class="w-5 h-5 rounded bg-primary-container text-on-primary-container flex items-center justify-center text-[10px] font-bold">JD</div>
+<span>Branch: feat/add-user-status</span>
+</div>
+<pre class="font-code-sm text-code-sm overflow-x-auto text-on-surface"><code class="language-sql"><span class="sql-keyword">ALTER TABLE</span> users 
+<span class="sql-keyword">ADD COLUMN</span> status <span class="sql-keyword">VARCHAR</span>(<span class="sql-string">50</span>) <span class="sql-keyword">DEFAULT</span> <span class="sql-string">'active'</span>;</code></pre>
+</div>
+<div class="border border-error/50 rounded p-3 bg-error/5 relative">
+<div class="absolute top-0 right-0 -mt-2 -mr-2 w-4 h-4 rounded-full bg-error animate-pulse"></div>
+<div class="flex items-center gap-2 mb-2 text-on-surface-variant text-code-sm font-code-sm">
+<div class="w-5 h-5 rounded bg-tertiary-container text-on-tertiary-container flex items-center justify-center text-[10px] font-bold">SW</div>
+<span>Branch: fix/user-roles</span>
+</div>
+<pre class="font-code-sm text-code-sm overflow-x-auto text-on-surface"><code class="language-sql"><span class="sql-keyword">ALTER TABLE</span> users 
+<span class="sql-keyword">ADD COLUMN</span> role_id <span class="sql-keyword">UUID</span> <span class="sql-keyword">REFERENCES</span> roles(id);</code></pre>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Deployment History Timeline -->
+<section class="bg-surface-container rounded border border-outline-variant shadow-sm flex-1 flex flex-col">
+<div class="p-unit-4 border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Deployment History</h3>
+<button class="text-primary hover:text-surface-tint font-body-md text-body-md flex items-center gap-1">
+                            View All <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+<div class="p-unit-6 flex-1">
+<div class="relative border-l border-outline-variant ml-3 space-y-8">
+<!-- Timeline Item 1 -->
+<div class="relative pl-6">
+<div class="absolute w-3 h-3 bg-secondary rounded-full -left-[6.5px] top-1.5 ring-4 ring-surface-container"></div>
+<div class="flex justify-between items-start mb-1">
+<div>
+<div class="flex items-center gap-2">
+<span class="font-code-md text-code-md text-on-surface font-semibold">#0041_add_indexes</span>
+<span class="px-2 py-0.5 rounded text-label-caps font-label-caps uppercase bg-secondary-container/20 text-secondary border border-secondary/30">Success</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Applied to Production via CI/CD</p>
+</div>
+<span class="font-code-sm text-code-sm text-on-surface-variant">2 hours ago</span>
+</div>
+<div class="mt-2 flex items-center gap-2">
+<img class="w-6 h-6 rounded border border-outline-variant object-cover" data-alt="A small professional headshot of a software engineer, modern corporate style, dimly lit studio lighting, realistic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNESQEPgVVbwVbVBINDXqXz4_6yykY4oa4qqBsg2fZCYouGPDm7DX_B4Faaa2hfcWK966-YwhCJHROW294yIZIPV4g5gUmRe3B1rUS2nh_3JsFpqJY3DVe1ryiObOPhCud4EUAAbazKrFJs-BE8W5gvhbpzRy3ywAeOKoK7pRC21TEoxnOcN-xwHOQtV2_a3QHoRqP9PR5PJp3y4v16hCvkq326CB7ftcqqe1Y-hg15aAEx6Tm0cl-lY7cNiONeiYgIcl0-H9eII4"/>
+<span class="font-body-sm text-code-sm text-on-surface">Deployed by Sarah Wong</span>
+</div>
+</div>
+<!-- Timeline Item 2 -->
+<div class="relative pl-6">
+<div class="absolute w-3 h-3 bg-secondary rounded-full -left-[6.5px] top-1.5 ring-4 ring-surface-container"></div>
+<div class="flex justify-between items-start mb-1">
+<div>
+<div class="flex items-center gap-2">
+<span class="font-code-md text-code-md text-on-surface font-semibold">#0040_update_schema_v2</span>
+<span class="px-2 py-0.5 rounded text-label-caps font-label-caps uppercase bg-secondary-container/20 text-secondary border border-secondary/30">Success</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Applied to Production via CI/CD</p>
+</div>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Yesterday</span>
+</div>
+<div class="mt-2 flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-primary-container text-on-primary-container flex items-center justify-center text-[10px] font-bold border border-outline-variant">JD</div>
+<span class="font-body-sm text-code-sm text-on-surface">Deployed by John Doe</span>
+</div>
+</div>
+<!-- Timeline Item 3 -->
+<div class="relative pl-6">
+<div class="absolute w-3 h-3 bg-error rounded-full -left-[6.5px] top-1.5 ring-4 ring-surface-container"></div>
+<div class="flex justify-between items-start mb-1">
+<div>
+<div class="flex items-center gap-2">
+<span class="font-code-md text-code-md text-on-surface font-semibold">#0039_drop_legacy_tables</span>
+<span class="px-2 py-0.5 rounded text-label-caps font-label-caps uppercase bg-error/20 text-error border border-error/30">Failed</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Rollback triggered automatically</p>
+</div>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Oct 24</span>
+</div>
+<div class="mt-2 p-2 bg-error/5 border border-error/20 rounded font-code-sm text-code-sm text-error/80">
+                                    ERROR: cannot drop table "orders" because other objects depend on it
+                                </div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Team & Settings -->
+<div class="xl:col-span-4 flex flex-col gap-unit-6">
+<!-- Team Members -->
+<section class="bg-surface-container rounded border border-outline-variant shadow-sm">
+<div class="p-unit-4 border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Team Access</h3>
+<button class="w-8 h-8 flex justify-center items-center rounded border border-outline-variant hover:bg-surface-variant transition-colors text-on-surface">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+<div class="p-0">
+<ul class="divide-y divide-outline-variant">
+<li class="p-unit-4 flex items-center justify-between hover:bg-surface-variant/50 transition-colors">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded object-cover border border-outline-variant" data-alt="A professional avatar of a software developer, clean tech startup background, realistic lighting, highly detailed" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCR6I9kdVpblm-V1Vm1eXSXGqeRQ35NEmckwiyaeTZ0Mb0yCx5i--FIZ2DfFMftNUqWdHsdvZ0ZZA_x2Vac20TzqST2fKJPgZJq5ko-_5Bx4EUiOxDJtSv2b4N8wImhXhCMrCD9vcMrizkpAuHUGafThHrvGMPZwYGgcDo7N6sHA1n2dzZwfAVEFw1SXPUPPzb8nAxLfvc7qUmGy7Iao6s1PDzAOCE6RA5ycUveNyIP4VJT5lMLyCpC6a67SL-bPB6mTjGU5J96qzQ"/>
+<div>
+<p class="font-body-md text-body-md text-on-surface font-medium">Alex Rivera</p>
+<p class="font-code-sm text-code-sm text-on-surface-variant">alex@rift.db</p>
+</div>
+</div>
+<span class="px-2 py-1 bg-surface-variant rounded text-code-sm font-code-sm text-on-surface border border-outline-variant">Admin</span>
+</li>
+<li class="p-unit-4 flex items-center justify-between hover:bg-surface-variant/50 transition-colors">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded object-cover border border-outline-variant" data-alt="A professional avatar of a female data engineer, dark mode aesthetic, realistic lighting, highly detailed" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyzt6atv6PwT3bvpHe2xxdszfjFSjfKPUZjJZOvINAllodFdtadHdHyiRVkDqowX3GyVAAfx8hbGZS_lua9ztLE-YiMs-Q3LOI-T-1EAKymdkIU4_dWS1-IA2JRHSdwSuWxDZxPfBbtJkhvxbE_BeImtRQyHgqMgPb8vDGjWIafe4Fz_Sgcol3XPDw95VYSR-bFapcGl-S4BNFCvcxopc2Dm8vhJcvradkU2nWv9_4ewEwFWBePHmE-x3rozTP4CimIgW_opMz5fU"/>
+<div>
+<p class="font-body-md text-body-md text-on-surface font-medium">Sarah Wong</p>
+<p class="font-code-sm text-code-sm text-on-surface-variant">sarah@rift.db</p>
+</div>
+</div>
+<span class="px-2 py-1 bg-surface-variant rounded text-code-sm font-code-sm text-on-surface border border-outline-variant">Developer</span>
+</li>
+<li class="p-unit-4 flex items-center justify-between hover:bg-surface-variant/50 transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-primary-container text-on-primary-container flex items-center justify-center font-bold border border-outline-variant">JD</div>
+<div>
+<p class="font-body-md text-body-md text-on-surface font-medium">John Doe</p>
+<p class="font-code-sm text-code-sm text-on-surface-variant">john@rift.db</p>
+</div>
+</div>
+<span class="px-2 py-1 bg-surface-variant rounded text-code-sm font-code-sm text-on-surface border border-outline-variant">Developer</span>
+</li>
+<li class="p-unit-4 flex items-center justify-between hover:bg-surface-variant/50 transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-bright text-on-surface flex items-center justify-center font-bold border border-outline-variant">MK</div>
+<div>
+<p class="font-body-md text-body-md text-on-surface font-medium">Mike Kim</p>
+<p class="font-code-sm text-code-sm text-on-surface-variant">mike@rift.db</p>
+</div>
+</div>
+<span class="px-2 py-1 bg-surface-dim rounded text-code-sm font-code-sm text-on-surface-variant border border-outline-variant">Viewer</span>
+</li>
+</ul>
+</div>
+</section>
+<!-- Webhook Settings -->
+<section class="bg-surface-container rounded border border-outline-variant shadow-sm flex-1">
+<div class="p-unit-4 border-b border-outline-variant">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Notifications</h3>
+<p class="font-code-sm text-code-sm text-on-surface-variant mt-1">Configure deployment webhooks</p>
+</div>
+<div class="p-unit-4 space-y-4">
+<div class="p-3 border border-outline-variant rounded bg-surface flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-[#4A154B] flex items-center justify-center text-white text-xs font-bold">#</div>
+<span class="font-body-md text-body-md text-on-surface font-medium">Slack Integration</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-surface after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<input class="w-full bg-surface-dim border border-outline-variant rounded px-2 py-1 text-code-sm font-code-sm text-on-surface-variant focus:border-primary focus:ring-0" readonly="" type="text" value="https://hooks.slack.com/services/T000/B000/XXX"/>
+</div>
+<div class="p-3 border border-outline-variant rounded bg-surface flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-[#5865F2] flex items-center justify-center text-white text-[10px] font-bold">D</div>
+<span class="font-body-md text-body-md text-on-surface font-medium">Discord Webhook</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-surface after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<input class="w-full bg-surface-dim border border-outline-variant rounded px-2 py-1 text-code-sm font-code-sm text-on-surface-variant focus:border-primary focus:ring-0" placeholder="https://discord.com/api/webhooks/..." type="text"/>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+</body></html>

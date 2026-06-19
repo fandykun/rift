@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Rift DB - Migrations</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-error-container": "#ffdad6",
+                      "on-tertiary-container": "#3e2400",
+                      "inverse-on-surface": "#2e3038",
+                      "on-secondary-fixed": "#002113",
+                      "on-secondary-fixed-variant": "#005236",
+                      "on-primary-container": "#00285d",
+                      "outline-variant": "#424754",
+                      "surface-container": "#1d2027",
+                      "on-error": "#690005",
+                      "tertiary-fixed-dim": "#ffb95f",
+                      "on-tertiary-fixed": "#2a1700",
+                      "inverse-primary": "#005ac2",
+                      "secondary-fixed": "#6ffbbe",
+                      "on-surface": "#e1e2ec",
+                      "surface-container-high": "#272a31",
+                      "on-primary": "#002e6a",
+                      "tertiary-fixed": "#ffddb8",
+                      "on-tertiary": "#472a00",
+                      "surface-variant": "#32353c",
+                      "surface-bright": "#363941",
+                      "inverse-surface": "#e1e2ec",
+                      "on-background": "#e1e2ec",
+                      "surface-dim": "#10131a",
+                      "primary-container": "#4d8eff",
+                      "on-secondary-container": "#00311f",
+                      "error": "#ffb4ab",
+                      "on-secondary": "#003824",
+                      "primary-fixed": "#d8e2ff",
+                      "tertiary-container": "#ca8100",
+                      "tertiary": "#ffb95f",
+                      "on-primary-fixed": "#001a42",
+                      "surface-container-low": "#191b23",
+                      "outline": "#8c909f",
+                      "on-tertiary-fixed-variant": "#653e00",
+                      "on-primary-fixed-variant": "#004395",
+                      "surface-tint": "#adc6ff",
+                      "error-container": "#93000a",
+                      "primary-fixed-dim": "#adc6ff",
+                      "background": "#10131a",
+                      "secondary-container": "#00a572",
+                      "surface-container-lowest": "#0b0e15",
+                      "surface-container-highest": "#32353c",
+                      "secondary": "#4edea3",
+                      "secondary-fixed-dim": "#4edea3",
+                      "surface": "#10131a",
+                      "on-surface-variant": "#c2c6d6",
+                      "primary": "#adc6ff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "container-max": "1440px",
+                      "base": "4px",
+                      "sidebar-width": "240px",
+                      "unit-8": "2rem",
+                      "unit-1": "0.25rem",
+                      "unit-2": "0.5rem",
+                      "gutter": "1rem",
+                      "unit-6": "1.5rem",
+                      "unit-4": "1rem"
+              },
+              "fontFamily": {
+                      "display": ["Geist"],
+                      "headline-md": ["Geist"],
+                      "headline-sm": ["Geist"],
+                      "code-md": ["JetBrains Mono"],
+                      "label-caps": ["JetBrains Mono"],
+                      "body-lg": ["Inter"],
+                      "body-md": ["Inter"],
+                      "code-sm": ["JetBrains Mono"]
+              },
+              "fontSize": {
+                      "display": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                      "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                      "headline-sm": ["18px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                      "code-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                      "label-caps": ["11px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                      "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                      "body-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                      "code-sm": ["12px", { "lineHeight": "1.4", "fontWeight": "400" }]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        /* Base styles to ensure material symbols render correctly */
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex antialiased">
+<!-- Shared Component: SideNavBar -->
+<nav class="bg-surface-container dark:bg-surface-container fixed left-0 h-full w-sidebar-width border-r border-outline-variant flex flex-col py-unit-4 z-20">
+<!-- Brand / Header -->
+<div class="px-unit-4 mb-unit-8 flex items-center gap-unit-2">
+<div class="w-8 h-8 rounded bg-primary-container flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined" data-icon="database" data-weight="fill" style="font-variation-settings: 'FILL' 1;">database</span>
+</div>
+<div>
+<h1 class="font-display text-headline-sm font-bold text-primary">Rift DB</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant uppercase">PostgreSQL Instance</p>
+</div>
+</div>
+<!-- Main Navigation Tabs -->
+<ul class="flex flex-col flex-1 gap-1 px-unit-2 font-body-md text-body-md">
+<!-- Dashboard (Inactive) -->
+<li>
+<a class="flex items-center gap-unit-2 px-unit-2 py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+</li>
+<!-- Migrations (Active - Intent matched) -->
+<li>
+<a class="flex items-center gap-unit-2 px-unit-2 py-2 rounded-DEFAULT text-primary bg-primary-container/10 border-r-2 border-primary cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px] fill" data-icon="database_line" style="font-variation-settings: 'FILL' 1;">database_off</span>
+<span class="font-medium">Migrations</span>
+</a>
+</li>
+<!-- Schema Diff (Inactive) -->
+<li>
+<a class="flex items-center gap-unit-2 px-unit-2 py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="difference">difference</span>
+<span>Schema Diff</span>
+</a>
+</li>
+<!-- Team (Inactive) -->
+<li>
+<a class="flex items-center gap-unit-2 px-unit-2 py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="group">group</span>
+<span>Team</span>
+</a>
+</li>
+<!-- Settings (Inactive) -->
+<li>
+<a class="flex items-center gap-unit-2 px-unit-2 py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+</li>
+</ul>
+<!-- CTA -->
+<div class="px-unit-4 mt-auto mb-unit-4">
+<button class="w-full bg-primary text-on-primary hover:bg-primary/90 font-body-md text-body-md font-medium py-2 rounded-DEFAULT transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                New Migration
+            </button>
+</div>
+<!-- Footer Tabs -->
+<ul class="flex flex-col gap-1 px-unit-2 border-t border-outline-variant pt-unit-4 font-body-md text-body-md">
+<li>
+<a class="flex items-center gap-unit-2 px-unit-2 py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="description">description</span>
+<span>Docs</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-unit-2 px-unit-2 py-2 rounded-DEFAULT text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="help">help</span>
+<span>Support</span>
+</a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="ml-sidebar-width flex-1 flex flex-col min-h-screen">
+<!-- Shared Component: TopAppBar -->
+<header class="bg-background dark:bg-background border-b border-outline-variant sticky top-0 w-full z-10 flex justify-between items-center h-14 px-gutter">
+<!-- Left: Brand / Search (Implicitly on left as per JSON, but we have sidebar, so maybe just nav links here or search) -->
+<div class="flex items-center gap-unit-6">
+<!-- Navigation Links from JSON -->
+<nav class="flex gap-unit-4 font-label-caps text-label-caps">
+<a class="text-on-surface-variant hover:text-on-surface transition-opacity duration-200 ease-in-out uppercase" href="#">Docs</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-opacity duration-200 ease-in-out uppercase" href="#">API</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-opacity duration-200 ease-in-out uppercase" href="#">Changelog</a>
+</nav>
+</div>
+<!-- Right: Actions & Profile -->
+<div class="flex items-center gap-unit-4 font-label-caps text-label-caps">
+<!-- Secondary Action -->
+<button class="px-3 py-1.5 border border-outline-variant text-on-surface hover:bg-surface-variant rounded-DEFAULT transition-colors uppercase duration-200 ease-in-out">
+                    Preview Changes
+                </button>
+<!-- Primary Action -->
+<button class="px-3 py-1.5 bg-primary text-on-primary hover:bg-primary/90 rounded-DEFAULT transition-colors font-bold uppercase duration-200 ease-in-out shadow-sm">
+                    Apply Migrations
+                </button>
+<!-- Icon Actions -->
+<div class="flex items-center gap-2 border-l border-outline-variant pl-4 ml-2 text-on-surface-variant">
+<button class="hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Page Canvas -->
+<main class="flex-1 p-unit-8 flex flex-col gap-unit-8 max-w-[1600px]">
+<!-- Page Header -->
+<div>
+<h2 class="font-display text-display text-on-background">Migration Dashboard</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Manage and track database schema evolution.</p>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-unit-6">
+<!-- Overview Stats (Top Row - Spans full width of grid) -->
+<div class="lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-unit-4">
+<!-- Stat Card 1 -->
+<div class="bg-surface-container border border-outline-variant p-unit-4 rounded-DEFAULT flex flex-col gap-2 relative overflow-hidden group hover:border-primary/50 transition-colors">
+<div class="absolute top-0 right-0 p-unit-4 text-outline-variant opacity-20 group-hover:opacity-40 transition-opacity">
+<span class="material-symbols-outlined text-4xl" data-icon="data_object">data_object</span>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Total Migrations</span>
+<div class="font-headline-md text-headline-md text-on-background">142</div>
+</div>
+<!-- Stat Card 2 -->
+<div class="bg-surface-container border border-outline-variant p-unit-4 rounded-DEFAULT flex flex-col gap-2 relative overflow-hidden group hover:border-secondary/50 transition-colors">
+<div class="absolute top-0 right-0 p-unit-4 text-secondary opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-4xl" data-icon="check_circle">check_circle</span>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Applied</span>
+<div class="font-headline-md text-headline-md text-secondary">138</div>
+</div>
+<!-- Stat Card 3 -->
+<div class="bg-surface-container border border-primary/30 p-unit-4 rounded-DEFAULT flex flex-col gap-2 relative overflow-hidden group shadow-[inset_0_0_20px_rgba(173,198,255,0.05)]">
+<div class="absolute top-0 right-0 p-unit-4 text-primary opacity-20">
+<span class="material-symbols-outlined text-4xl animate-pulse" data-icon="pending_actions">pending_actions</span>
+</div>
+<span class="font-label-caps text-label-caps text-primary uppercase">Pending</span>
+<div class="font-headline-md text-headline-md text-on-background flex items-baseline gap-2">
+                            4 <span class="font-body-md text-body-md text-on-surface-variant normal-case">requires review</span>
+</div>
+</div>
+</div>
+<!-- Main Content Split -->
+<!-- Migrations Table Area (Left/Main) -->
+<div class="lg:col-span-8 flex flex-col gap-unit-4">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-sm text-headline-sm text-on-background">Recent Activity</h3>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+<input class="bg-surface-container border border-outline-variant rounded-DEFAULT py-1.5 pl-9 pr-3 text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-shadow placeholder:text-on-surface-variant w-64" placeholder="Search migrations..." type="text"/>
+</div>
+</div>
+<!-- Table Container -->
+<div class="bg-surface-container border border-outline-variant rounded-DEFAULT overflow-hidden">
+<table class="w-full text-left border-collapse whitespace-nowrap">
+<thead>
+<tr class="bg-surface-container-high border-b border-outline-variant font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">
+<th class="p-unit-4 font-semibold">Status</th>
+<th class="p-unit-4 font-semibold">ID (Timestamp)</th>
+<th class="p-unit-4 font-semibold">Name</th>
+<th class="p-unit-4 font-semibold">Author</th>
+<th class="p-unit-4 font-semibold">Applied Date</th>
+<th class="p-unit-4 font-semibold text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface">
+<!-- Row: Pending -->
+<tr class="border-b border-outline-variant hover:bg-surface-variant/50 transition-colors group">
+<td class="p-unit-4">
+<div class="inline-flex items-center gap-1.5 border border-outline-variant text-on-surface-variant px-2 py-0.5 rounded-full font-label-caps text-label-caps uppercase bg-surface-container-low">
+<div class="w-1.5 h-1.5 rounded-full bg-outline-variant"></div>
+                                            Pending
+                                        </div>
+</td>
+<td class="p-unit-4 font-code-sm text-code-sm text-primary">20231028_143022</td>
+<td class="p-unit-4 font-code-sm text-code-sm">add_billing_indexes</td>
+<td class="p-unit-4 text-on-surface-variant">sjones</td>
+<td class="p-unit-4 text-on-surface-variant italic">-</td>
+<td class="p-unit-4 text-right">
+<div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="px-2 py-1 text-xs border border-outline-variant text-on-surface rounded hover:bg-surface-variant transition-colors">View SQL</button>
+<button class="px-2 py-1 text-xs border border-error/50 text-error rounded hover:bg-error/10 transition-colors">Discard</button>
+</div>
+</td>
+</tr>
+<!-- Row: Pending (Dangerous) -->
+<tr class="border-b border-outline-variant hover:bg-surface-variant/50 transition-colors group bg-error-container/5">
+<td class="p-unit-4">
+<div class="inline-flex items-center gap-1.5 border border-error/50 text-error px-2 py-0.5 rounded-full font-label-caps text-label-caps uppercase bg-error-container/10">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+                                            Pending
+                                        </div>
+</td>
+<td class="p-unit-4 font-code-sm text-code-sm text-primary">20231027_091500</td>
+<td class="p-unit-4 font-code-sm text-code-sm">drop_legacy_users_col</td>
+<td class="p-unit-4 text-on-surface-variant">amiller</td>
+<td class="p-unit-4 text-on-surface-variant italic">-</td>
+<td class="p-unit-4 text-right">
+<div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="px-2 py-1 text-xs border border-outline-variant text-on-surface rounded hover:bg-surface-variant transition-colors">View SQL</button>
+<button class="px-2 py-1 text-xs border border-error/50 text-error rounded hover:bg-error/10 transition-colors">Discard</button>
+</div>
+</td>
+</tr>
+<!-- Row: Applied -->
+<tr class="border-b border-outline-variant hover:bg-surface-variant/50 transition-colors group">
+<td class="p-unit-4">
+<div class="inline-flex items-center gap-1.5 border border-secondary/30 text-secondary px-2 py-0.5 rounded-full font-label-caps text-label-caps uppercase bg-secondary-container/10">
+<span class="material-symbols-outlined text-[14px]">check</span>
+                                            Applied
+                                        </div>
+</td>
+<td class="p-unit-4 font-code-sm text-code-sm text-on-surface-variant">20231026_180012</td>
+<td class="p-unit-4 font-code-sm text-code-sm text-on-surface-variant">create_organizations_table</td>
+<td class="p-unit-4 text-on-surface-variant">sjones</td>
+<td class="p-unit-4 text-on-surface-variant">Oct 26, 18:05 UTC</td>
+<td class="p-unit-4 text-right">
+<div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="px-2 py-1 text-xs border border-outline-variant text-on-surface rounded hover:bg-surface-variant transition-colors">View SQL</button>
+<button class="px-2 py-1 text-xs border border-outline-variant text-on-surface rounded hover:bg-surface-variant transition-colors">Rollback</button>
+</div>
+</td>
+</tr>
+<!-- Row: Applied -->
+<tr class="border-b border-outline-variant hover:bg-surface-variant/50 transition-colors group">
+<td class="p-unit-4">
+<div class="inline-flex items-center gap-1.5 border border-secondary/30 text-secondary px-2 py-0.5 rounded-full font-label-caps text-label-caps uppercase bg-secondary-container/10">
+<span class="material-symbols-outlined text-[14px]">check</span>
+                                            Applied
+                                        </div>
+</td>
+<td class="p-unit-4 font-code-sm text-code-sm text-on-surface-variant">20231025_112045</td>
+<td class="p-unit-4 font-code-sm text-code-sm text-on-surface-variant">alter_user_preferences</td>
+<td class="p-unit-4 text-on-surface-variant">system</td>
+<td class="p-unit-4 text-on-surface-variant">Oct 25, 11:21 UTC</td>
+<td class="p-unit-4 text-right">
+<div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="px-2 py-1 text-xs border border-outline-variant text-on-surface rounded hover:bg-surface-variant transition-colors">View SQL</button>
+<button class="px-2 py-1 text-xs border border-outline-variant text-on-surface rounded hover:bg-surface-variant transition-colors opacity-50 cursor-not-allowed">Rollback</button>
+</div>
+</td>
+</tr>
+<!-- Row: Failed -->
+<tr class="hover:bg-surface-variant/50 transition-colors group">
+<td class="p-unit-4">
+<div class="inline-flex items-center gap-1.5 border border-error/50 text-error px-2 py-0.5 rounded-full font-label-caps text-label-caps uppercase bg-error-container/10">
+<span class="material-symbols-outlined text-[14px]">error</span>
+                                            Failed
+                                        </div>
+</td>
+<td class="p-unit-4 font-code-sm text-code-sm text-on-surface-variant">20231024_080000</td>
+<td class="p-unit-4 font-code-sm text-code-sm text-on-surface-variant">add_foreign_keys_auth</td>
+<td class="p-unit-4 text-on-surface-variant">amiller</td>
+<td class="p-unit-4 text-on-surface-variant">-</td>
+<td class="p-unit-4 text-right">
+<div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="px-2 py-1 text-xs border border-outline-variant text-on-surface rounded hover:bg-surface-variant transition-colors">View Log</button>
+<button class="px-2 py-1 text-xs border border-outline-variant text-on-surface rounded hover:bg-surface-variant transition-colors">Retry</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Right Side Panels (Sidebar within canvas) -->
+<div class="lg:col-span-4 flex flex-col gap-unit-6">
+<!-- Quick Actions Card -->
+<div class="bg-surface-container border border-outline-variant rounded-DEFAULT p-unit-4 flex flex-col gap-unit-4 shadow-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-background flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">bolt</span>
+                            Quick Actions
+                        </h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Manage environment connectivity and local state.</p>
+<div class="flex flex-col gap-2 mt-2">
+<button class="w-full bg-primary text-on-primary hover:bg-primary/90 font-body-md text-body-md font-medium py-2 px-4 rounded-DEFAULT transition-colors flex items-center justify-between group">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">cable</span>
+                                    Connect to DB
+                                </div>
+<span class="material-symbols-outlined text-[16px] opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0 duration-200">arrow_forward</span>
+</button>
+<button class="w-full border border-primary text-primary hover:bg-primary/10 font-body-md text-body-md font-medium py-2 px-4 rounded-DEFAULT transition-colors flex items-center justify-between group">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">sync</span>
+                                    Sync Local Files
+                                </div>
+<div class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse hidden group-hover:block"></div>
+</button>
+</div>
+</div>
+<!-- Linter Alerts Section (Glassmorphism touch) -->
+<div class="relative overflow-hidden border border-error-container rounded-DEFAULT bg-[#1a1414]/80 backdrop-blur-md p-unit-4 flex flex-col gap-unit-4">
+<!-- Subtle background glow -->
+<div class="absolute -top-10 -right-10 w-32 h-32 bg-error/10 blur-3xl rounded-full pointer-events-none"></div>
+<h3 class="font-headline-sm text-headline-sm text-error flex items-center gap-2 relative z-10">
+<span class="material-symbols-outlined">gpp_bad</span>
+                            Linter Alerts
+                        </h3>
+<div class="flex flex-col gap-3 relative z-10">
+<!-- Alert Item -->
+<div class="bg-background border border-error/20 rounded p-3 flex gap-3 items-start">
+<span class="material-symbols-outlined text-error mt-0.5 text-[20px]">warning</span>
+<div class="flex-1">
+<p class="font-body-md text-body-md text-on-surface text-sm leading-tight">
+<span class="font-bold text-error">DROP COLUMN</span> detected. This is a destructive operation that may cause downtime.
+                                    </p>
+<div class="mt-2 flex items-center justify-between">
+<span class="font-code-sm text-code-sm text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">20231027_091500</span>
+<button class="font-label-caps text-label-caps text-primary hover:underline uppercase">Review</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

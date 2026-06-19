@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Schema Diff Viewer</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-container": "#3e2400",
+                        "inverse-on-surface": "#2e3038",
+                        "on-secondary-fixed": "#002113",
+                        "on-secondary-fixed-variant": "#005236",
+                        "on-primary-container": "#00285d",
+                        "outline-variant": "#424754",
+                        "surface-container": "#1d2027",
+                        "on-error": "#690005",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "on-tertiary-fixed": "#2a1700",
+                        "inverse-primary": "#005ac2",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-surface": "#e1e2ec",
+                        "surface-container-high": "#272a31",
+                        "on-primary": "#002e6a",
+                        "tertiary-fixed": "#ffddb8",
+                        "on-tertiary": "#472a00",
+                        "surface-variant": "#32353c",
+                        "surface-bright": "#363941",
+                        "inverse-surface": "#e1e2ec",
+                        "on-background": "#e1e2ec",
+                        "surface-dim": "#10131a",
+                        "primary-container": "#4d8eff",
+                        "on-secondary-container": "#00311f",
+                        "error": "#ffb4ab",
+                        "on-secondary": "#003824",
+                        "primary-fixed": "#d8e2ff",
+                        "tertiary-container": "#ca8100",
+                        "tertiary": "#ffb95f",
+                        "on-primary-fixed": "#001a42",
+                        "surface-container-low": "#191b23",
+                        "outline": "#8c909f",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "on-primary-fixed-variant": "#004395",
+                        "surface-tint": "#adc6ff",
+                        "error-container": "#93000a",
+                        "primary-fixed-dim": "#adc6ff",
+                        "background": "#10131a",
+                        "secondary-container": "#00a572",
+                        "surface-container-lowest": "#0b0e15",
+                        "surface-container-highest": "#32353c",
+                        "secondary": "#4edea3",
+                        "secondary-fixed-dim": "#4edea3",
+                        "surface": "#10131a",
+                        "on-surface-variant": "#c2c6d6",
+                        "primary": "#adc6ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "container-max": "1440px",
+                        "base": "4px",
+                        "sidebar-width": "240px",
+                        "unit-8": "2rem",
+                        "unit-1": "0.25rem",
+                        "unit-2": "0.5rem",
+                        "gutter": "1rem",
+                        "unit-6": "1.5rem",
+                        "unit-4": "1rem"
+                    },
+                    "fontFamily": {
+                        "display": ["Geist", "sans-serif"],
+                        "headline-md": ["Geist", "sans-serif"],
+                        "headline-sm": ["Geist", "sans-serif"],
+                        "code-md": ["JetBrains Mono", "monospace"],
+                        "label-caps": ["JetBrains Mono", "monospace"],
+                        "body-lg": ["Inter", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "code-sm": ["JetBrains Mono", "monospace"]
+                    },
+                    "fontSize": {
+                        "display": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "headline-sm": ["18px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                        "code-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "label-caps": ["11px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "code-sm": ["12px", { "lineHeight": "1.4", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md h-screen overflow-hidden flex selection:bg-primary-container selection:text-on-primary-container">
+<!-- SideNavBar -->
+<nav class="bg-surface-container border-r border-outline-variant docked fixed left-0 h-full w-sidebar-width flex flex-col py-unit-4 z-20">
+<!-- Header -->
+<div class="px-unit-4 mb-unit-6 flex items-center gap-unit-2">
+<div class="w-8 h-8 rounded bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined icon-fill">database</span>
+</div>
+<div>
+<div class="font-display text-headline-sm font-bold text-primary">Rift DB</div>
+<div class="text-[10px] text-on-surface-variant font-medium tracking-wide uppercase">PostgreSQL Instance</div>
+</div>
+</div>
+<!-- CTA -->
+<div class="px-unit-4 mb-unit-6">
+<button class="w-full flex items-center justify-center gap-unit-2 bg-primary text-on-primary font-medium py-2 rounded transition-colors hover:bg-primary/90 active:scale-95 duration-200">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                New Migration
+            </button>
+</div>
+<!-- Main Navigation -->
+<div class="flex-1 overflow-y-auto">
+<ul class="flex flex-col gap-1 px-unit-2">
+<li>
+<a class="flex items-center gap-unit-3 px-unit-2 py-2 rounded text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+                        Dashboard
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-unit-3 px-unit-2 py-2 rounded text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]">database_off</span>
+                        Migrations
+                    </a>
+</li>
+<!-- ACTIVE ITEM -->
+<li>
+<a class="flex items-center gap-unit-3 px-unit-2 py-2 text-primary bg-primary-container/10 border-r-2 border-primary cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px] icon-fill">difference</span>
+                        Schema Diff
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-unit-3 px-unit-2 py-2 rounded text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+                        Team
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-unit-3 px-unit-2 py-2 rounded text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+                        Settings
+                    </a>
+</li>
+</ul>
+</div>
+<!-- Footer Navigation -->
+<div class="mt-auto px-unit-2 pt-unit-4 border-t border-outline-variant/30">
+<ul class="flex flex-col gap-1">
+<li>
+<a class="flex items-center gap-unit-3 px-unit-2 py-2 rounded text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[18px]">description</span>
+                        Docs
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-unit-3 px-unit-2 py-2 rounded text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined text-[18px]">help</span>
+                        Support
+                    </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col ml-sidebar-width min-w-0">
+<!-- TopAppBar -->
+<header class="bg-background border-b border-outline-variant docked full-width top-0 sticky z-10">
+<div class="flex justify-between items-center h-14 px-gutter">
+<!-- Left Section (Links) -->
+<div class="flex items-center gap-unit-6">
+<span class="font-display text-headline-sm font-bold text-on-background tracking-tight">Rift</span>
+<nav class="hidden md:flex items-center gap-unit-4 font-label-caps text-label-caps uppercase">
+<a class="text-on-surface-variant hover:text-on-surface transition-opacity duration-200 ease-in-out" href="#">Docs</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-opacity duration-200 ease-in-out" href="#">API</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-opacity duration-200 ease-in-out" href="#">Changelog</a>
+</nav>
+</div>
+<!-- Right Section (Actions) -->
+<div class="flex items-center gap-unit-4">
+<button class="font-label-caps text-label-caps px-unit-4 py-1.5 border border-outline-variant text-on-surface-variant rounded hover:bg-surface-variant transition-colors duration-200 ease-in-out uppercase">
+                        Preview Changes
+                    </button>
+<button class="font-label-caps text-label-caps px-unit-4 py-1.5 bg-primary text-on-primary font-bold rounded shadow-sm hover:brightness-110 transition-all duration-200 ease-in-out uppercase flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">rocket_launch</span>
+                        Apply Migrations
+                    </button>
+<div class="w-px h-4 bg-outline-variant mx-1"></div>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors flex items-center">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Workspace (Canvas) -->
+<main class="flex-1 overflow-hidden flex flex-col p-gutter gap-unit-4 bg-surface-dim">
+<!-- Summary & Controls Panel -->
+<div class="bg-surface-container-low border border-outline-variant rounded p-unit-4 flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-unit-4">
+<div class="flex items-center justify-center w-10 h-10 rounded-full bg-secondary-container/20 text-secondary">
+<span class="material-symbols-outlined text-[20px]">account_tree</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Schema Summary</h2>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-2 mt-0.5">
+<span class="inline-flex items-center gap-1 text-secondary"><span class="material-symbols-outlined text-[14px]">add_box</span> 3 tables to be created</span>
+<span class="text-outline-variant">•</span>
+<span class="inline-flex items-center gap-1 text-tertiary"><span class="material-symbols-outlined text-[14px]">edit</span> 1 column to be altered</span>
+</p>
+</div>
+</div>
+<div class="flex items-center gap-unit-4">
+<label class="flex items-center cursor-pointer gap-2 group">
+<div class="relative">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-10 h-5 bg-surface-variant rounded-full peer peer-checked:bg-primary/30 transition-colors border border-outline-variant peer-checked:border-primary/50"></div>
+<div class="absolute left-0.5 top-0.5 w-4 h-4 bg-on-surface-variant rounded-full transition-transform peer-checked:translate-x-5 peer-checked:bg-primary shadow-sm"></div>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant group-hover:text-on-surface transition-colors uppercase">Safe Preview (DDL)</span>
+</label>
+</div>
+</div>
+<!-- Split Pane Diff Viewer -->
+<div class="flex-1 flex gap-px bg-outline-variant border border-outline-variant rounded overflow-hidden shadow-sm">
+<!-- Left Pane: Local Migrations (Desired) -->
+<div class="flex-1 flex flex-col bg-surface-container min-w-0">
+<div class="h-10 bg-surface-container-high border-b border-outline-variant flex items-center px-unit-4 gap-unit-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="font-label-caps text-label-caps text-on-surface uppercase tracking-wider">Local Migrations</span>
+<span class="ml-auto font-code-sm text-code-sm text-on-surface-variant">20231024_init.sql</span>
+</div>
+<div class="flex-1 overflow-auto bg-background font-code-md text-code-md py-unit-2 custom-scrollbar">
+<table class="w-full text-left border-collapse table-fixed">
+<tbody class="text-on-surface">
+<tr class="hover:bg-surface-variant/30">
+<td class="w-12 text-right pr-3 text-outline-variant select-none border-r border-outline-variant/30">1</td>
+<td class="pl-4 whitespace-pre"><span class="text-primary-fixed">CREATE TABLE</span> <span class="text-tertiary">users</span> (</td>
+</tr>
+<tr class="hover:bg-surface-variant/30">
+<td class="w-12 text-right pr-3 text-outline-variant select-none border-r border-outline-variant/30">2</td>
+<td class="pl-4 whitespace-pre">    id <span class="text-primary-fixed">UUID PRIMARY KEY</span> <span class="text-primary-fixed">DEFAULT</span> <span class="text-secondary-fixed">uuid_generate_v4</span>(),</td>
+</tr>
+<!-- Diff Addition -->
+<tr class="bg-secondary-container/10 border-l-2 border-secondary">
+<td class="w-12 text-right pr-3 text-secondary/60 select-none border-r border-secondary/30">3</td>
+<td class="pl-4 whitespace-pre text-secondary">    username <span class="text-secondary-fixed">VARCHAR(255)</span> <span class="text-secondary-fixed">UNIQUE NOT NULL</span>,</td>
+</tr>
+<tr class="bg-secondary-container/10 border-l-2 border-secondary">
+<td class="w-12 text-right pr-3 text-secondary/60 select-none border-r border-secondary/30">4</td>
+<td class="pl-4 whitespace-pre text-secondary">    email <span class="text-secondary-fixed">VARCHAR(255)</span> <span class="text-secondary-fixed">UNIQUE NOT NULL</span>,</td>
+</tr>
+<tr class="bg-secondary-container/10 border-l-2 border-secondary">
+<td class="w-12 text-right pr-3 text-secondary/60 select-none border-r border-secondary/30">5</td>
+<td class="pl-4 whitespace-pre text-secondary">    created_at <span class="text-secondary-fixed">TIMESTAMP WITH TIME ZONE</span> <span class="text-secondary-fixed">DEFAULT</span> <span class="text-secondary-fixed">NOW</span>()</td>
+</tr>
+<tr class="hover:bg-surface-variant/30">
+<td class="w-12 text-right pr-3 text-outline-variant select-none border-r border-outline-variant/30">6</td>
+<td class="pl-4 whitespace-pre">);</td>
+</tr>
+<tr class="hover:bg-surface-variant/30"><td class="w-12 text-right pr-3 text-outline-variant select-none border-r border-outline-variant/30">7</td><td class="pl-4 whitespace-pre"></td></tr>
+<tr class="hover:bg-surface-variant/30">
+<td class="w-12 text-right pr-3 text-outline-variant select-none border-r border-outline-variant/30">8</td>
+<td class="pl-4 whitespace-pre"><span class="text-primary-fixed">CREATE INDEX</span> <span class="text-tertiary">idx_users_email</span> <span class="text-primary-fixed">ON</span> <span class="text-tertiary">users</span>(email);</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Right Pane: Live Database (Current) -->
+<div class="flex-1 flex flex-col bg-surface-container min-w-0">
+<div class="h-10 bg-surface-container-high border-b border-outline-variant flex items-center px-unit-4 gap-unit-2">
+<span class="w-2 h-2 rounded-full bg-surface-variant border border-outline"></span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Live Database</span>
+<span class="ml-auto font-code-sm text-code-sm text-on-surface-variant">schema: public</span>
+</div>
+<div class="flex-1 overflow-auto bg-background font-code-md text-code-md py-unit-2 custom-scrollbar">
+<table class="w-full text-left border-collapse table-fixed">
+<tbody class="text-on-surface">
+<tr class="hover:bg-surface-variant/30">
+<td class="w-12 text-right pr-3 text-outline-variant select-none border-r border-outline-variant/30">1</td>
+<td class="pl-4 whitespace-pre"><span class="text-primary-fixed">CREATE TABLE</span> <span class="text-tertiary">users</span> (</td>
+</tr>
+<tr class="hover:bg-surface-variant/30">
+<td class="w-12 text-right pr-3 text-outline-variant select-none border-r border-outline-variant/30">2</td>
+<td class="pl-4 whitespace-pre">    id <span class="text-primary-fixed">UUID PRIMARY KEY</span> <span class="text-primary-fixed">DEFAULT</span> <span class="text-secondary-fixed">uuid_generate_v4</span>(),</td>
+</tr>
+<!-- Diff Deletion -->
+<tr class="bg-error-container/10 border-l-2 border-error">
+<td class="w-12 text-right pr-3 text-error/60 select-none border-r border-error/30">3</td>
+<td class="pl-4 whitespace-pre text-error line-through decoration-error/50">    username <span class="text-error">VARCHAR(100)</span> <span class="text-error">NOT NULL</span>,</td>
+</tr>
+<tr class="bg-error-container/10 border-l-2 border-error">
+<td class="w-12 text-right pr-3 text-error/60 select-none border-r border-error/30">4</td>
+<td class="pl-4 whitespace-pre text-error line-through decoration-error/50">    email <span class="text-error">VARCHAR(100)</span> <span class="text-error">NOT NULL</span>,</td>
+</tr>
+<tr>
+<td class="w-12 text-right pr-3 text-outline-variant select-none border-r border-outline-variant/30 bg-surface-container/50"></td>
+<td class="pl-4 whitespace-pre bg-surface-container/50"></td>
+</tr>
+<tr class="hover:bg-surface-variant/30">
+<td class="w-12 text-right pr-3 text-outline-variant select-none border-r border-outline-variant/30">5</td>
+<td class="pl-4 whitespace-pre">);</td>
+</tr>
+<tr class="hover:bg-surface-variant/30"><td class="w-12 text-right pr-3 text-outline-variant select-none border-r border-outline-variant/30">6</td><td class="pl-4 whitespace-pre"></td></tr>
+<tr>
+<td class="w-12 text-right pr-3 text-outline-variant select-none border-r border-outline-variant/30 bg-surface-container/50"></td>
+<td class="pl-4 whitespace-pre bg-surface-container/50 text-outline-variant italic">/* Index idx_users_email missing */</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</div>
+<style>
+        /* Custom scrollbar for a pro feel */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #424754; /* outline-variant */
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #8c909f; /* outline */
+        }
+    </style>
+</body></html>
