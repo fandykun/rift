@@ -263,12 +263,12 @@ No phase is skipped. No phase is merged unless its verification checklist passes
 1. [x] Set up `react-router-dom` with routes: `/`, `/migrations`, `/migrations/:version`, `/migrations/:version/diff`, `/team`, `/settings`
 2. [x] Set up TanStack Query `QueryClient` in `main.tsx`
 3. [x] Set up Zustand store for: auth token, environment name, sidebar open state
-4. [ ] Build shared components:
+4. [x] Build shared components:
    - [x] `AppShell` — fixed sidebar + sticky top app bar matching `DESIGN.md` Sections 7.1 and 7.2
    - [x] `Sidebar` — exact nav structure and active right-border accent from `DESIGN.md` Section 12
    - [x] `StatusBadge` — applied, pending, pending-danger, failed, rolled-back chips matching `DESIGN.md` Section 7.3
    - [x] `StatCard`, `DataTable`, `QuickActionsCard`, `LinterAlertsCard`, `LoadingSkeleton`
-   - [ ] `ErrorBoundary`
+   - [x] `ErrorBoundary`
 5. [x] Build API client layer (`src/lib/api.ts`):
    - [x] `fetchMigrations()`, `fetchMigration(version)`, `fetchDiff(version)`, `fetchStatus()`, `fetchHistory()`, `fetchLint()`, `fetchTeam()`, `fetchConflicts()`
    - [x] `triggerUp()` (returns EventSource), `triggerDown(steps)`
