@@ -84,6 +84,45 @@ func writeMigrationFile(t *testing.T, dir string, name string, content string) {
 	}
 }
 
+func TestRunUpConflictRequiresForceIntegration(t *testing.T) {
+	configPath, databaseURL := setupUpIntegration(t)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	pool, err := db.NewPool(ctx, &config.Config{DatabaseURL: databaseURL})
+	if err != nil {
+		t.Fatalf("creating setup pool: %v", err)
+	}
+	defer pool.Close()
+	if err := migration.EnsureStateTable(ctx, pool); err != nil {
+		t.Fatalf("ensuring state table: %v", err)
+	}
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		t.Fatalf("beginning conflict setup transaction: %v", err)
+	}
+	if err := migration.RecordApplied(ctx, tx, migration.MigrationRecord{Version: "20260620_115959", Filename: "20260620_115959_missing", Checksum: "missing-checksum"}); err != nil {
+		_ = tx.Rollback(ctx)
+		t.Fatalf("recording missing-file conflict: %v", err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		t.Fatalf("committing conflict setup transaction: %v", err)
+	}
+
+	var stdout bytes.Buffer
+	if err := RunUp(context.Background(), &stdout, configPath, false, false); err == nil {
+		t.Fatal("expected conflict error without force")
+	}
+
+	stdout.Reset()
+	if err := RunUp(context.Background(), &stdout, configPath, false, true); err != nil {
+		t.Fatalf("expected --force to apply pending migrations despite conflict, got %v", err)
+	}
+	if !strings.Contains(stdout.String(), "WARN continuing despite 1 conflict") {
+		t.Fatalf("expected force warning, got %q", stdout.String())
+	}
+}
+
 func setupUpIntegration(t *testing.T) (string, string) {
 	t.Helper()
 	databaseURL := os.Getenv("RIFT_TEST_DATABASE_URL")

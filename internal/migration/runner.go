@@ -39,6 +39,11 @@ func AcquireAdvisoryLock(ctx context.Context, pool *pgxpool.Pool) (func(), error
 
 // RunUp applies all pending local migrations in order and records each success.
 func RunUp(ctx context.Context, pool *pgxpool.Pool, cfg *config.Config, dryRun bool) error {
+	return RunUpWithOptions(ctx, pool, cfg, dryRun, false)
+}
+
+// RunUpWithOptions applies pending migrations with optional conflict bypass for reviewed --force flows.
+func RunUpWithOptions(ctx context.Context, pool *pgxpool.Pool, cfg *config.Config, dryRun bool, ignoreConflicts bool) error {
 	if cfg == nil {
 		return fmt.Errorf("running migrations up: config is required")
 	}
@@ -64,7 +69,7 @@ func RunUp(ctx context.Context, pool *pgxpool.Pool, cfg *config.Config, dryRun b
 	if err != nil {
 		return err
 	}
-	if conflicts := DetectConflicts(applied, files); len(conflicts) > 0 {
+	if conflicts := DetectConflicts(applied, files); len(conflicts) > 0 && !ignoreConflicts {
 		return fmt.Errorf("migration conflicts detected: %d conflict(s) must be resolved before applying", len(conflicts))
 	}
 

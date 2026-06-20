@@ -87,7 +87,7 @@ func RunUp(ctx context.Context, stdout io.Writer, configPath string, dryRun bool
 		fmt.Fprintf(stdout, "%s continuing despite %d conflict(s) because --force was set\n", warn("WARN"), len(conflicts))
 	}
 
-	if err := migration.RunUp(ctx, pool, cfg, false); err != nil {
+	if err := migration.RunUpWithOptions(ctx, pool, cfg, false, force); err != nil {
 		return err
 	}
 	for _, file := range pending {
