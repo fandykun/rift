@@ -18,7 +18,7 @@ const version = "0.1.0-dev"
 
 func main() {
 	if err := newRootCommand().Execute(); err != nil {
-		if errors.Is(err, cli.ErrSchemaDiffDetected) {
+		if errors.Is(err, cli.ErrSchemaDiffDetected) || errors.Is(err, cli.ErrLintErrorsFound) {
 			os.Exit(1)
 		}
 		color.New(color.FgRed).Fprintln(os.Stderr, "FAIL", err)
@@ -49,7 +49,7 @@ func newRootCommand() *cobra.Command {
 		cli.NewStatusCommand(&configPath),
 		cli.NewDiffCommand(&configPath),
 		placeholderCommand("server", "Start the Rift API server and embedded dashboard"),
-		placeholderCommand("lint", "Lint migration SQL for dangerous DDL patterns"),
+		cli.NewLintCommand(&configPath),
 		newConfigCommand(&configPath),
 	)
 
