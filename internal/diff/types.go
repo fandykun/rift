@@ -39,3 +39,33 @@ type ForeignKeyDef struct {
 	ForeignTableName  string
 	ForeignColumnName string
 }
+
+// SchemaDiff describes structural changes between two schema snapshots.
+type SchemaDiff struct {
+	TablesAdded    []TableDef
+	TablesDropped  []TableDef
+	TablesModified []TableModification
+	IndexChanges   []IndexChange
+}
+
+// TableModification describes column-level changes for one table.
+type TableModification struct {
+	TableName       string
+	ColumnsAdded    []ColumnDef
+	ColumnsDropped  []ColumnDef
+	ColumnsModified []ColumnModification
+}
+
+// ColumnModification describes a changed column definition.
+type ColumnModification struct {
+	Before ColumnDef
+	After  ColumnDef
+}
+
+// IndexChange describes an added, dropped, or modified index.
+type IndexChange struct {
+	Name   string
+	Kind   string
+	Before *IndexDef
+	After  *IndexDef
+}
