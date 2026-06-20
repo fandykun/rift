@@ -43,11 +43,11 @@ No phase is skipped. No phase is merged unless its verification checklist passes
 12. Load Google Fonts for Geist, Inter, JetBrains Mono, and Material Symbols Outlined in the frontend entry HTML
 
 **Verification:**
-- [ ] `go mod tidy` runs without error
-- [ ] `cd web && npm install && npm run build` succeeds
-- [ ] `make build` produces a `./rift` binary
-- [ ] `./rift --help` prints usage without panicking
-- [ ] Tailwind config exposes all tokens required by `DESIGN.md`
+- [x] `go mod tidy` runs without error
+- [x] `cd web && npm install && npm run build` succeeds
+- [x] `make build` produces a `./rift` binary
+- [x] `./rift --help` prints usage without panicking
+- [x] Tailwind config exposes all tokens required by `DESIGN.md`
 
 **Commit:** `phase(0): project scaffold, Makefile, docker, web boilerplate`
 
@@ -73,10 +73,10 @@ No phase is skipped. No phase is merged unless its verification checklist passes
 5. Implement `rift config check` subcommand: loads config, pings DB, prints colored OK/FAIL status
 
 **Verification:**
-- [ ] `./rift --help` shows all subcommands
-- [ ] `./rift config check` connects to a real PG instance and prints green OK
-- [ ] Invalid `DATABASE_URL` prints clear error message, exit code 1
-- [ ] Unit test: config loads from YAML and env vars with correct precedence
+- [x] `./rift --help` shows all subcommands
+- [x] `./rift config check` connects to a real PG instance and prints green OK
+- [x] Invalid `DATABASE_URL` prints clear error message, exit code 1
+- [x] Unit test: config loads from YAML and env vars with correct precedence
 
 **Commit:** `phase(1): config loading, db pool, cobra root, config-check command`
 
@@ -107,11 +107,11 @@ No phase is skipped. No phase is merged unless its verification checklist passes
    - Each migration runs in a DDL transaction; if it fails, the transaction is rolled back and a clear error is printed
 
 **Verification:**
-- [ ] `EnsureStateTable` is idempotent (run twice, no error)
-- [ ] `LoadFiles` correctly parses and sorts 5 test migration files
-- [ ] Unit test: conflict detection catches `MISSING_FILE` and `CHECKSUM_MISMATCH`
-- [ ] Integration test: `RunUp` applies 3 test migrations, all appear in `_rift_migrations`
-- [ ] Advisory lock: a second concurrent `RunUp` call returns a clear "migration already in progress" error
+- [x] `EnsureStateTable` is idempotent (run twice, no error)
+- [x] `LoadFiles` correctly parses and sorts 5 test migration files
+- [x] Unit test: conflict detection catches `MISSING_FILE` and `CHECKSUM_MISMATCH`
+- [x] Integration test: `RunUp` applies 3 test migrations, all appear in `_rift_migrations`
+- [x] Advisory lock: a second concurrent `RunUp` call returns a clear "migration already in progress" error
 
 **Commit:** `phase(2): migration state table, runner, advisory locks, conflict detection`
 
@@ -141,11 +141,11 @@ No phase is skipped. No phase is merged unless its verification checklist passes
    - Applied migrations in green, pending in yellow, rolled-back in gray
 
 **Verification:**
-- [ ] `rift new add_users_table` creates correctly named file pair
-- [ ] `rift status` shows correct applied/pending split against real DB
-- [ ] `rift up --dry-run` prints what would be applied without modifying DB
-- [ ] `rift down` prompts for confirmation; entering "no" aborts
-- [ ] `rift up` halts with clear message on conflict detection
+- [x] `rift new add_users_table` creates correctly named file pair
+- [x] `rift status` shows correct applied/pending split against real DB
+- [x] `rift up --dry-run` prints what would be applied without modifying DB
+- [x] `rift down` prompts for confirmation; entering "no" aborts
+- [x] `rift up` halts with clear message on conflict detection
 
 **Commit:** `phase(3): rift new, up, down, status CLI commands`
 
@@ -172,11 +172,11 @@ No phase is skipped. No phase is merged unless its verification checklist passes
    - Summary line: `"3 tables modified, 1 table added, 2 indexes changed"`
 
 **Verification:**
-- [ ] `IntrospectLive` correctly reflects a 5-table test schema including indexes and FK constraints
-- [ ] `ParseMigrationSQL` correctly parses CREATE TABLE with 8 columns, ALTER TABLE ADD COLUMN, ALTER TABLE DROP COLUMN, CREATE INDEX
-- [ ] `ComputeDiff` correctly identifies: 1 new table, 1 dropped column, 1 modified column type, 1 new index across a test migration pair
-- [ ] `rift diff` prints colored output and exits 0 when no diff, exits 1 when diff exists (for CI use)
-- [ ] Unit tests cover all 4 diff categories with table-driven test cases
+- [x] `IntrospectLive` correctly reflects a 5-table test schema including indexes and FK constraints
+- [x] `ParseMigrationSQL` correctly parses CREATE TABLE with 8 columns, ALTER TABLE ADD COLUMN, ALTER TABLE DROP COLUMN, CREATE INDEX
+- [x] `ComputeDiff` correctly identifies: 1 new table, 1 dropped column, 1 modified column type, 1 new index across a test migration pair
+- [x] `rift diff` prints colored output and exits 0 when no diff, exits 1 when diff exists (for CI use)
+- [x] Unit tests cover all 4 diff categories with table-driven test cases
 
 **Commit:** `phase(4): schema diff engine — introspect, parse, diff, CLI command`
 
@@ -205,10 +205,10 @@ No phase is skipped. No phase is merged unless its verification checklist passes
 4. Add linter summary to `rift diff` output
 
 **Verification:**
-- [ ] Unit test: each of the 6 patterns is correctly detected in isolation
-- [ ] `rift lint` on a file with `DROP COLUMN` exits 1 and prints the suggestion
-- [ ] `rift lint` on a clean file exits 0
-- [ ] `rift up --force` applies despite linter errors and prints a warning banner
+- [x] Unit test: each of the 6 patterns is correctly detected in isolation
+- [x] `rift lint` on a file with `DROP COLUMN` exits 1 and prints the suggestion
+- [x] `rift lint` on a clean file exits 0
+- [x] `rift up --force` applies despite linter errors and prints a warning banner
 
 **Commit:** `phase(5): DDL linter — 6 dangerous patterns, CLI command, runner integration`
 

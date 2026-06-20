@@ -33,7 +33,7 @@ func TestRunUpAndRunDownIntegration(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if _, err := pool.Exec(ctx, `DROP TABLE IF EXISTS posts; DROP TABLE IF EXISTS users; DROP TABLE IF EXISTS _rift_migrations;`); err != nil {
+	if _, err := pool.Exec(ctx, `DROP TABLE IF EXISTS posts CASCADE; DROP TABLE IF EXISTS users CASCADE; DROP TABLE IF EXISTS _rift_migrations CASCADE;`); err != nil {
 		t.Fatalf("resetting integration database: %v", err)
 	}
 
