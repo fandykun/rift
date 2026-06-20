@@ -11,6 +11,7 @@ var (
 	createTablePattern = regexp.MustCompile(`(?is)CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([a-zA-Z_][\w.]*)\s*\((.*?)\)\s*;`)
 	alterAddPattern    = regexp.MustCompile(`(?is)ALTER\s+TABLE\s+([a-zA-Z_][\w.]*)\s+ADD\s+(?:COLUMN\s+)?([a-zA-Z_][\w]*)\s+([^;]+);`)
 	alterDropPattern   = regexp.MustCompile(`(?is)ALTER\s+TABLE\s+([a-zA-Z_][\w.]*)\s+DROP\s+(?:COLUMN\s+)?(?:IF\s+EXISTS\s+)?([a-zA-Z_][\w]*)\s*;`)
+	dropTablePattern   = regexp.MustCompile(`(?is)DROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?([a-zA-Z_][\w.]*)\s*;`)
 	createIndexPattern = regexp.MustCompile(`(?is)CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:CONCURRENTLY\s+)?(?:IF\s+NOT\s+EXISTS\s+)?([a-zA-Z_][\w]*)\s+ON\s+([a-zA-Z_][\w.]*)\s*\((.*?)\)\s*;`)
 )
 
@@ -47,7 +48,7 @@ func ParseMigrationSQL(sql string) (*SchemaSnapshot, error) {
 		snapshot.Indexes = append(snapshot.Indexes, IndexDef{
 			Name:       normalizeIdentifier(match[1]),
 			TableName:  normalizeIdentifier(match[2]),
-			Definition: strings.Join(strings.Fields(match[0]), " "),
+			Definition: normalizeIndexDefinition(match[0]),
 		})
 	}
 
@@ -183,4 +184,8 @@ func normalizeIdentifier(identifier string) string {
 		identifier = identifier[dot+1:]
 	}
 	return strings.Trim(identifier, `"`)
+}
+
+func normalizeIndexDefinition(definition string) string {
+	return strings.TrimSuffix(strings.Join(strings.Fields(definition), " "), ";")
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -17,6 +18,9 @@ const version = "0.1.0-dev"
 
 func main() {
 	if err := newRootCommand().Execute(); err != nil {
+		if errors.Is(err, cli.ErrSchemaDiffDetected) {
+			os.Exit(1)
+		}
 		color.New(color.FgRed).Fprintln(os.Stderr, "FAIL", err)
 		os.Exit(1)
 	}
@@ -27,11 +31,12 @@ func newRootCommand() *cobra.Command {
 	var verbose bool
 
 	rootCmd := &cobra.Command{
-		Use:          "rift",
-		Short:        "Self-hosted PostgreSQL migration manager",
-		Long:         "Rift is a CLI and web dashboard for authoring, previewing, applying, and auditing PostgreSQL migrations.",
-		Version:      version,
-		SilenceUsage: true,
+		Use:           "rift",
+		Short:         "Self-hosted PostgreSQL migration manager",
+		Long:          "Rift is a CLI and web dashboard for authoring, previewing, applying, and auditing PostgreSQL migrations.",
+		Version:       version,
+		SilenceUsage:  true,
+		SilenceErrors: true,
 	}
 
 	rootCmd.PersistentFlags().StringVar(&configPath, "config", "./rift.yaml", "path to Rift config file")
@@ -42,7 +47,7 @@ func newRootCommand() *cobra.Command {
 		cli.NewUpCommand(&configPath),
 		cli.NewDownCommand(&configPath),
 		cli.NewStatusCommand(&configPath),
-		placeholderCommand("diff", "Compare pending migrations against the live database schema"),
+		cli.NewDiffCommand(&configPath),
 		placeholderCommand("server", "Start the Rift API server and embedded dashboard"),
 		placeholderCommand("lint", "Lint migration SQL for dangerous DDL patterns"),
 		newConfigCommand(&configPath),
