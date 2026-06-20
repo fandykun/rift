@@ -1,0 +1,11 @@
+environment: development
+database_url: postgres://rift:rift@localhost:5432/rift?sslmode=disable
+migrations_dir: ./migrations
+author: fandy@example.com
+
+server:
+  port: 7878
+  token: change-me-in-production
+
+linter:
+  warn_only: false

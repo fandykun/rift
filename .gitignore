@@ -1,0 +1,23 @@
+# Go
+/rift
+*.test
+coverage.out
+
+# Node / frontend
+node_modules/
+dist/
+web/dist/
+
+# Local config and secrets
+.env
+.env.*
+!.env.example
+rift.yaml
+
+# Local agent/session state
+.hermes/
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
