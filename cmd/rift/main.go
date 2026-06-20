@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/fandykun/rift/internal/cli"
 	"github.com/fandykun/rift/internal/config"
 	"github.com/fandykun/rift/internal/db"
 	"github.com/fatih/color"
@@ -37,7 +38,7 @@ func newRootCommand() *cobra.Command {
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "enable verbose logging")
 
 	rootCmd.AddCommand(
-		placeholderCommand("new", "Create a new timestamped migration pair"),
+		cli.NewMigrationCommand(&configPath),
 		placeholderCommand("up", "Apply pending migrations"),
 		placeholderCommand("down", "Roll back applied migrations"),
 		placeholderCommand("status", "Show applied and pending migrations"),
