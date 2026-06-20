@@ -1,10 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/AppShell'
+import { MigrationDetailPage } from './pages/MigrationDetailPage'
 import { MigrationsPage } from './pages/MigrationsPage'
-
-function MigrationDetailPage() {
-  return <div className="font-body-md text-body-md text-on-surface">Migration detail</div>
-}
 
 function MigrationDiffPage() {
   return <div className="font-body-md text-body-md text-on-surface">Schema diff</div>

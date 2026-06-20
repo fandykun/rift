@@ -280,15 +280,15 @@ No phase is skipped. No phase is merged unless its verification checklist passes
    - [x] Search input for name/version filtering
    - [x] Right sidebar with Quick Actions and Linter Alerts cards
    - [x] Row View action → `/migrations/:version`; Diff action → `/migrations/:version/diff`
-8. [ ] Build `/migrations/:version` SQL Authoring Interface from `DESIGN.md` Section 8.3:
-   - Left schema/table browser, center editable CodeMirror SQL editor, right Zero-Downtime Linter panel
-   - Metadata strip: filename input, category dropdown, author badge
-   - Table browser insertion action inserts a table name at the active editor cursor
+8. [x] Build `/migrations/:version` SQL Authoring Interface from `DESIGN.md` Section 8.3:
+   - [x] Left schema/table browser, center editable CodeMirror SQL editor, right Zero-Downtime Linter panel
+   - [x] Metadata strip: filename input, category dropdown, author badge
+   - [x] Table browser insertion action inserts a table name at the active editor cursor
 
 **Verification:**
 - [x] App loads on `http://localhost:5173` with correct token prompt if not set
 - [x] `/migrations` renders the mockup-aligned dashboard layout, stat cards, table, Quick Actions, and Linter Alerts
-- [ ] Click a migration → SQL Authoring Interface opens with CodeMirror syntax highlighting and linter panel
+- [x] Click a migration → SQL Authoring Interface opens with CodeMirror syntax highlighting and linter panel
 - [x] Sidebar links navigate correctly and use the `DESIGN.md` active border treatment
 
 **Commit:** `phase(7): React app shell, routing, API client, dashboard, migrations list`
