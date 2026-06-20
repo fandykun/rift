@@ -4,7 +4,10 @@ go 1.22
 
 require (
 	github.com/fatih/color v1.17.0
+	github.com/go-chi/chi/v5 v5.0.12
 	github.com/jackc/pgx/v5 v5.7.2
+	github.com/jmoiron/sqlx v1.3.5
+	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/spf13/cobra v1.10.2
 	gopkg.in/yaml.v3 v3.0.1
 )
