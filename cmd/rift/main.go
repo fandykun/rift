@@ -39,7 +39,7 @@ func newRootCommand() *cobra.Command {
 
 	rootCmd.AddCommand(
 		cli.NewMigrationCommand(&configPath),
-		placeholderCommand("up", "Apply pending migrations"),
+		cli.NewUpCommand(&configPath),
 		placeholderCommand("down", "Roll back applied migrations"),
 		placeholderCommand("status", "Show applied and pending migrations"),
 		placeholderCommand("diff", "Compare pending migrations against the live database schema"),
