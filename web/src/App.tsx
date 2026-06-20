@@ -1,21 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/AppShell'
-
-function MigrationsPage() {
-  return (
-    <div>
-      <div className="mb-unit-8">
-        <h2 className="font-display text-display text-on-background">Migration Dashboard</h2>
-        <p className="font-body-md text-body-md text-on-surface-variant">
-          Manage and track database schema evolution.
-        </p>
-      </div>
-      <div className="rounded border border-outline-variant bg-surface-container p-unit-4 text-on-surface-variant">
-        Migration dashboard implementation is next.
-      </div>
-    </div>
-  )
-}
+import { MigrationsPage } from './pages/MigrationsPage'
 
 function MigrationDetailPage() {
   return <div className="font-body-md text-body-md text-on-surface">Migration detail</div>

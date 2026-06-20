@@ -267,28 +267,29 @@ No phase is skipped. No phase is merged unless its verification checklist passes
    - [x] `AppShell` — fixed sidebar + sticky top app bar matching `DESIGN.md` Sections 7.1 and 7.2
    - [x] `Sidebar` — exact nav structure and active right-border accent from `DESIGN.md` Section 12
    - [x] `StatusBadge` — applied, pending, pending-danger, failed, rolled-back chips matching `DESIGN.md` Section 7.3
-   - [ ] `StatCard`, `DataTable`, `QuickActionsCard`, `LinterAlertsCard`, `LoadingSkeleton`, `ErrorBoundary`
+   - [x] `StatCard`, `DataTable`, `QuickActionsCard`, `LinterAlertsCard`, `LoadingSkeleton`
+   - [ ] `ErrorBoundary`
 5. [x] Build API client layer (`src/lib/api.ts`):
    - [x] `fetchMigrations()`, `fetchMigration(version)`, `fetchDiff(version)`, `fetchStatus()`, `fetchHistory()`, `fetchLint()`, `fetchTeam()`, `fetchConflicts()`
    - [x] `triggerUp()` (returns EventSource), `triggerDown(steps)`
    - [x] All requests attach the configured Bearer token from Zustand store
 6. [x] Build `/` as a redirect to `/migrations` or render the same Migration Dashboard.
-7. [ ] Build `/migrations` Migration Dashboard from `DESIGN.md` Section 8.1:
-   - Three stat cards: Total Migrations, Applied, Pending
-   - Recent Activity table: Status | ID | Name | Author | Applied Date | Actions
-   - Search input for name/version filtering
-   - Right sidebar with Quick Actions and Linter Alerts cards
-   - Row View action → `/migrations/:version`; Diff action → `/migrations/:version/diff`
+7. [x] Build `/migrations` Migration Dashboard from `DESIGN.md` Section 8.1:
+   - [x] Three stat cards: Total Migrations, Applied, Pending
+   - [x] Recent Activity table: Status | ID | Name | Author | Applied Date | Actions
+   - [x] Search input for name/version filtering
+   - [x] Right sidebar with Quick Actions and Linter Alerts cards
+   - [x] Row View action → `/migrations/:version`; Diff action → `/migrations/:version/diff`
 8. [ ] Build `/migrations/:version` SQL Authoring Interface from `DESIGN.md` Section 8.3:
    - Left schema/table browser, center editable CodeMirror SQL editor, right Zero-Downtime Linter panel
    - Metadata strip: filename input, category dropdown, author badge
    - Table browser insertion action inserts a table name at the active editor cursor
 
 **Verification:**
-- [ ] App loads on `http://localhost:5173` with correct token prompt if not set
-- [ ] `/migrations` renders the mockup-aligned dashboard layout, stat cards, table, Quick Actions, and Linter Alerts
+- [x] App loads on `http://localhost:5173` with correct token prompt if not set
+- [x] `/migrations` renders the mockup-aligned dashboard layout, stat cards, table, Quick Actions, and Linter Alerts
 - [ ] Click a migration → SQL Authoring Interface opens with CodeMirror syntax highlighting and linter panel
-- [ ] Sidebar links navigate correctly and use the `DESIGN.md` active border treatment
+- [x] Sidebar links navigate correctly and use the `DESIGN.md` active border treatment
 
 **Commit:** `phase(7): React app shell, routing, API client, dashboard, migrations list`
 
