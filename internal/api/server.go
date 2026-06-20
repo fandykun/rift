@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"sort"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/fandykun/rift/internal/config"
 	internaldiff "github.com/fandykun/rift/internal/diff"
+	embedui "github.com/fandykun/rift/internal/embed"
 	"github.com/fandykun/rift/internal/linter"
 	"github.com/fandykun/rift/internal/migration"
 	"github.com/go-chi/chi/v5"
@@ -40,6 +42,7 @@ func NewServer(cfg *config.Config, pool *pgxpool.Pool) *chi.Mux {
 		r.Get("/team", server.handleTeam)
 		r.Get("/conflicts", server.handleConflicts)
 	})
+	router.NotFound(serveSPA)
 	return router
 }
 
@@ -432,4 +435,32 @@ func writeSSE(w http.ResponseWriter, flusher http.Flusher, event string, value i
 	}
 	flusher.Flush()
 	return nil
+}
+
+func serveSPA(w http.ResponseWriter, r *http.Request) {
+	if strings.HasPrefix(r.URL.Path, "/api/") {
+		writeError(w, http.StatusNotFound, "API route not found")
+		return
+	}
+	uiFS, err := fs.Sub(embedui.FS, "ui")
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, fmt.Sprintf("loading embedded UI: %v", err))
+		return
+	}
+	path := strings.TrimPrefix(r.URL.Path, "/")
+	if path != "" {
+		if file, err := uiFS.Open(path); err == nil {
+			_ = file.Close()
+			http.FileServer(http.FS(uiFS)).ServeHTTP(w, r)
+			return
+		}
+	}
+	content, err := fs.ReadFile(uiFS, "index.html")
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, fmt.Sprintf("reading embedded UI index: %v", err))
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(content)
 }

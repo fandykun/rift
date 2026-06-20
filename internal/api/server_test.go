@@ -46,6 +46,21 @@ func TestTeamEndpoint(t *testing.T) {
 	}
 }
 
+func TestSPAFallbackServesIndex(t *testing.T) {
+	router := NewServer(&config.Config{Server: config.ServerConfig{Token: "secret"}}, nil)
+	request := httptest.NewRequest(http.MethodGet, "/migrations/20260620_180000/diff", nil)
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), "Rift") {
+		t.Fatalf("expected embedded UI index, got %s", response.Body.String())
+	}
+}
+
 func TestStatusAndMigrationsIntegration(t *testing.T) {
 	cfg := setupAPIIntegration(t)
 	ctx := httptest.NewRequest(http.MethodGet, "/", nil).Context()

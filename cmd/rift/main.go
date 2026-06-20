@@ -48,7 +48,7 @@ func newRootCommand() *cobra.Command {
 		cli.NewDownCommand(&configPath),
 		cli.NewStatusCommand(&configPath),
 		cli.NewDiffCommand(&configPath),
-		placeholderCommand("server", "Start the Rift API server and embedded dashboard"),
+		cli.NewServerCommand(&configPath),
 		cli.NewLintCommand(&configPath),
 		newConfigCommand(&configPath),
 	)
