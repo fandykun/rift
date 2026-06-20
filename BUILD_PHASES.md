@@ -244,12 +244,12 @@ No phase is skipped. No phase is merged unless its verification checklist passes
    - Prints startup message with URL
 
 **Verification:**
-- [ ] `GET /api/v1/status` returns correct JSON with valid counts
-- [ ] `GET /api/v1/migrations` returns correct applied/pending split
-- [ ] Bearer token middleware returns 401 for missing/wrong token
-- [ ] `POST /api/v1/migrate/up` SSE stream sends one event per migration applied
-- [ ] `GET /api/v1/team` and `GET /api/v1/conflicts` return JSON consumed by the Team page
-- [ ] `rift server` starts and serves a 200 on `/`
+- [x] `GET /api/v1/status` returns correct JSON with valid counts
+- [x] `GET /api/v1/migrations` returns correct applied/pending split
+- [x] Bearer token middleware returns 401 for missing/wrong token
+- [x] `POST /api/v1/migrate/up` SSE stream sends one event per migration applied
+- [x] `GET /api/v1/team` and `GET /api/v1/conflicts` return JSON consumed by the Team page
+- [x] `rift server` starts and serves a 200 on `/`
 
 **Commit:** `phase(6): Chi API server, all REST endpoints, SSE for live deploy, embed UI mount`
 
@@ -260,26 +260,26 @@ No phase is skipped. No phase is merged unless its verification checklist passes
 **Goal:** Build the React app shell, routing, API client, and the Migrations list page.
 
 **Tasks:**
-1. Set up `react-router-dom` with routes: `/`, `/migrations`, `/migrations/:version`, `/migrations/:version/diff`, `/team`, `/settings`
-2. Set up TanStack Query `QueryClient` in `main.tsx`
-3. Set up Zustand store for: auth token, environment name, sidebar open state
-4. Build shared components:
-   - `AppShell` — fixed sidebar + sticky top app bar matching `DESIGN.md` Sections 7.1 and 7.2
-   - `Sidebar` — exact nav structure and active right-border accent from `DESIGN.md` Section 12
-   - `StatusBadge` — applied, pending, pending-danger, failed, rolled-back chips matching `DESIGN.md` Section 7.3
-   - `StatCard`, `DataTable`, `QuickActionsCard`, `LinterAlertsCard`, `LoadingSkeleton`, `ErrorBoundary`
-5. Build API client layer (`src/lib/api.ts`):
-   - `fetchMigrations()`, `fetchMigration(version)`, `fetchDiff(version)`, `fetchStatus()`, `fetchHistory()`, `fetchLint()`, `fetchTeam()`, `fetchConflicts()`
-   - `triggerUp()` (returns EventSource), `triggerDown(steps)`
-   - All requests attach the configured Bearer token from Zustand store
-6. Build `/` as a redirect to `/migrations` or render the same Migration Dashboard.
-7. Build `/migrations` Migration Dashboard from `DESIGN.md` Section 8.1:
+1. [x] Set up `react-router-dom` with routes: `/`, `/migrations`, `/migrations/:version`, `/migrations/:version/diff`, `/team`, `/settings`
+2. [x] Set up TanStack Query `QueryClient` in `main.tsx`
+3. [x] Set up Zustand store for: auth token, environment name, sidebar open state
+4. [ ] Build shared components:
+   - [x] `AppShell` — fixed sidebar + sticky top app bar matching `DESIGN.md` Sections 7.1 and 7.2
+   - [x] `Sidebar` — exact nav structure and active right-border accent from `DESIGN.md` Section 12
+   - [x] `StatusBadge` — applied, pending, pending-danger, failed, rolled-back chips matching `DESIGN.md` Section 7.3
+   - [ ] `StatCard`, `DataTable`, `QuickActionsCard`, `LinterAlertsCard`, `LoadingSkeleton`, `ErrorBoundary`
+5. [x] Build API client layer (`src/lib/api.ts`):
+   - [x] `fetchMigrations()`, `fetchMigration(version)`, `fetchDiff(version)`, `fetchStatus()`, `fetchHistory()`, `fetchLint()`, `fetchTeam()`, `fetchConflicts()`
+   - [x] `triggerUp()` (returns EventSource), `triggerDown(steps)`
+   - [x] All requests attach the configured Bearer token from Zustand store
+6. [x] Build `/` as a redirect to `/migrations` or render the same Migration Dashboard.
+7. [ ] Build `/migrations` Migration Dashboard from `DESIGN.md` Section 8.1:
    - Three stat cards: Total Migrations, Applied, Pending
    - Recent Activity table: Status | ID | Name | Author | Applied Date | Actions
    - Search input for name/version filtering
    - Right sidebar with Quick Actions and Linter Alerts cards
    - Row View action → `/migrations/:version`; Diff action → `/migrations/:version/diff`
-8. Build `/migrations/:version` SQL Authoring Interface from `DESIGN.md` Section 8.3:
+8. [ ] Build `/migrations/:version` SQL Authoring Interface from `DESIGN.md` Section 8.3:
    - Left schema/table browser, center editable CodeMirror SQL editor, right Zero-Downtime Linter panel
    - Metadata strip: filename input, category dropdown, author badge
    - Table browser insertion action inserts a table name at the active editor cursor
