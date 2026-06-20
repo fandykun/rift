@@ -23,6 +23,7 @@ type Config struct {
 	Author        string       `yaml:"author"`
 	Server        ServerConfig `yaml:"server"`
 	Linter        LinterConfig `yaml:"linter"`
+	Team          []TeamMember `yaml:"team"`
 }
 
 // ServerConfig controls the embedded HTTP API/dashboard server.
@@ -34,6 +35,13 @@ type ServerConfig struct {
 // LinterConfig controls dangerous-DDL linter behavior.
 type LinterConfig struct {
 	WarnOnly bool `yaml:"warn_only"`
+}
+
+// TeamMember describes one collaborator displayed in the dashboard.
+type TeamMember struct {
+	Name  string `yaml:"name" json:"name"`
+	Email string `yaml:"email" json:"email"`
+	Role  string `yaml:"role" json:"role"`
 }
 
 // Default returns a Config populated with safe local defaults.

@@ -40,6 +40,10 @@ server:
   token: yaml-token
 linter:
   warn_only: true
+team:
+  - name: Fandy
+    email: fandy@example.com
+    role: admin
 `)
 	if err := os.WriteFile(path, content, 0o600); err != nil {
 		t.Fatalf("writing config fixture: %v", err)
@@ -76,6 +80,9 @@ linter:
 	}
 	if !cfg.Linter.WarnOnly {
 		t.Fatalf("Linter.WarnOnly = false, want true")
+	}
+	if len(cfg.Team) != 1 || cfg.Team[0].Email != "fandy@example.com" || cfg.Team[0].Role != "admin" {
+		t.Fatalf("Team = %+v", cfg.Team)
 	}
 }
 

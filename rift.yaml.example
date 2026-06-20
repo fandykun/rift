@@ -9,3 +9,8 @@ server:
 
 linter:
   warn_only: false
+
+team:
+  - name: Fandy
+    email: fandy@example.com
+    role: admin
