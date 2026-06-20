@@ -40,7 +40,7 @@ func newRootCommand() *cobra.Command {
 	rootCmd.AddCommand(
 		cli.NewMigrationCommand(&configPath),
 		cli.NewUpCommand(&configPath),
-		placeholderCommand("down", "Roll back applied migrations"),
+		cli.NewDownCommand(&configPath),
 		placeholderCommand("status", "Show applied and pending migrations"),
 		placeholderCommand("diff", "Compare pending migrations against the live database schema"),
 		placeholderCommand("server", "Start the Rift API server and embedded dashboard"),
