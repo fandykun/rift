@@ -33,6 +33,8 @@ func NewServer(cfg *config.Config, pool *pgxpool.Pool) *chi.Mux {
 		r.Get("/migrations", server.handleMigrations)
 		r.Get("/migrations/{version}", server.handleMigrationDetail)
 		r.Get("/migrations/{version}/diff", server.handleMigrationDiff)
+		r.Post("/migrate/up", server.handleMigrateUp)
+		r.Post("/migrate/down", server.handleMigrateDown)
 		r.Get("/history", server.handleHistory)
 		r.Get("/lint", server.handleLint)
 		r.Get("/team", server.handleTeam)
@@ -80,6 +82,15 @@ type lintResponse struct {
 type lintAPIResult struct {
 	Filename string               `json:"filename"`
 	Warnings []linter.LintWarning `json:"warnings"`
+}
+
+type migrateDownRequest struct {
+	Steps int `json:"steps"`
+}
+
+type migrateDownResponse struct {
+	Status string `json:"status"`
+	Steps  int    `json:"steps"`
 }
 
 func (s *server) handleStatus(w http.ResponseWriter, r *http.Request) {
@@ -168,6 +179,69 @@ func (s *server) handleHistory(w http.ResponseWriter, r *http.Request) {
 	}
 	sort.Slice(applied, func(i int, j int) bool { return applied[i].AppliedAt.After(applied[j].AppliedAt) })
 	writeJSON(w, http.StatusOK, applied)
+}
+
+func (s *server) handleMigrateUp(w http.ResponseWriter, r *http.Request) {
+	if s.cfg == nil {
+		writeError(w, http.StatusInternalServerError, "server config is not initialized")
+		return
+	}
+	if s.pool == nil {
+		writeError(w, http.StatusInternalServerError, "database pool is not initialized")
+		return
+	}
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		writeError(w, http.StatusInternalServerError, "streaming is not supported")
+		return
+	}
+
+	force := r.URL.Query().Get("force") == "true" || r.URL.Query().Get("force") == "1"
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.WriteHeader(http.StatusOK)
+
+	applied := 0
+	err := migration.RunUpWithEvents(r.Context(), s.pool, s.cfg, false, force, func(event migration.ApplyEvent) error {
+		applied++
+		return writeSSE(w, flusher, "migration", map[string]interface{}{
+			"status":       "applied",
+			"version":      event.Version,
+			"filename":     event.Filename,
+			"execution_ms": event.ExecutionMs,
+		})
+	})
+	if err != nil {
+		_ = writeSSE(w, flusher, "error", map[string]interface{}{"status": "error", "message": err.Error()})
+		return
+	}
+	_ = writeSSE(w, flusher, "done", map[string]interface{}{"status": "done", "applied": applied})
+}
+
+func (s *server) handleMigrateDown(w http.ResponseWriter, r *http.Request) {
+	if s.cfg == nil {
+		writeError(w, http.StatusInternalServerError, "server config is not initialized")
+		return
+	}
+	if s.pool == nil {
+		writeError(w, http.StatusInternalServerError, "database pool is not initialized")
+		return
+	}
+	var request migrateDownRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeError(w, http.StatusBadRequest, fmt.Sprintf("decoding rollback request: %v", err))
+		return
+	}
+	if request.Steps <= 0 {
+		writeError(w, http.StatusBadRequest, "steps must be greater than zero")
+		return
+	}
+	if err := migration.RunDown(r.Context(), s.pool, s.cfg, request.Steps); err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, migrateDownResponse{Status: "rolled-back", Steps: request.Steps})
 }
 
 func (s *server) handleLint(w http.ResponseWriter, r *http.Request) {
@@ -346,4 +420,16 @@ func writeJSON(w http.ResponseWriter, status int, value interface{}) {
 
 func writeError(w http.ResponseWriter, status int, message string) {
 	writeJSON(w, status, map[string]string{"error": strings.TrimSpace(message)})
+}
+
+func writeSSE(w http.ResponseWriter, flusher http.Flusher, event string, value interface{}) error {
+	content, err := json.Marshal(value)
+	if err != nil {
+		return fmt.Errorf("encoding SSE event %q: %w", event, err)
+	}
+	if _, err := fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event, content); err != nil {
+		return fmt.Errorf("writing SSE event %q: %w", event, err)
+	}
+	flusher.Flush()
+	return nil
 }

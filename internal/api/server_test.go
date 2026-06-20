@@ -115,6 +115,60 @@ func TestLintAndConflictsIntegration(t *testing.T) {
 	}
 }
 
+func TestMigrateUpSSEAndDownIntegration(t *testing.T) {
+	cfg := setupAPIMutationIntegration(t)
+	ctx := httptest.NewRequest(http.MethodGet, "/", nil).Context()
+	pool, err := db.NewPool(ctx, cfg)
+	if err != nil {
+		t.Fatalf("creating pool: %v", err)
+	}
+	defer pool.Close()
+	router := NewServer(cfg, pool)
+
+	upResponse := performAPIRequest(t, router, http.MethodPost, "/api/v1/migrate/up", cfg.Server.Token, nil)
+	if upResponse.Code != http.StatusOK {
+		t.Fatalf("migrate up status = %d, body = %s", upResponse.Code, upResponse.Body.String())
+	}
+	body := upResponse.Body.String()
+	if !strings.Contains(body, "event: migration") || !strings.Contains(body, "event: done") || !strings.Contains(body, "20260620_180000_create_api_widgets") {
+		t.Fatalf("expected migration and done SSE events, got %q", body)
+	}
+
+	downResponse := performAPIRequest(t, router, http.MethodPost, "/api/v1/migrate/down", cfg.Server.Token, strings.NewReader(`{"steps":1}`))
+	if downResponse.Code != http.StatusOK {
+		t.Fatalf("migrate down status = %d, body = %s", downResponse.Code, downResponse.Body.String())
+	}
+	if !strings.Contains(downResponse.Body.String(), "rolled-back") {
+		t.Fatalf("expected rollback response, got %q", downResponse.Body.String())
+	}
+}
+
+func setupAPIMutationIntegration(t *testing.T) *config.Config {
+	t.Helper()
+	databaseURL := os.Getenv("RIFT_TEST_DATABASE_URL")
+	if databaseURL == "" {
+		t.Skip("RIFT_TEST_DATABASE_URL is not set")
+	}
+	ctx := httptest.NewRequest(http.MethodGet, "/", nil).Context()
+	pool, err := db.NewPool(ctx, &config.Config{DatabaseURL: databaseURL})
+	if err != nil {
+		t.Fatalf("creating setup pool: %v", err)
+	}
+	defer pool.Close()
+	if _, err := pool.Exec(ctx, `DROP TABLE IF EXISTS api_widgets CASCADE; DROP TABLE IF EXISTS _rift_migrations CASCADE;`); err != nil {
+		t.Fatalf("resetting database: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	migrationsDir := filepath.Join(tmpDir, "migrations")
+	if err := os.MkdirAll(migrationsDir, 0o755); err != nil {
+		t.Fatalf("creating migrations dir: %v", err)
+	}
+	writeFile(t, migrationsDir, "20260620_180000_create_api_widgets.up.sql", "CREATE TABLE api_widgets (id BIGSERIAL PRIMARY KEY);")
+	writeFile(t, migrationsDir, "20260620_180000_create_api_widgets.down.sql", "DROP TABLE api_widgets;")
+	return &config.Config{Environment: "test", DatabaseURL: databaseURL, MigrationsDir: migrationsDir, Author: "api-test", Server: config.ServerConfig{Token: "secret"}}
+}
+
 func setupAPIIntegration(t *testing.T) *config.Config {
 	t.Helper()
 	databaseURL := os.Getenv("RIFT_TEST_DATABASE_URL")

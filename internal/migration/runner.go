@@ -37,6 +37,16 @@ func AcquireAdvisoryLock(ctx context.Context, pool *pgxpool.Pool) (func(), error
 	return release, nil
 }
 
+// ApplyEvent describes a migration applied by RunUpWithEvents.
+type ApplyEvent struct {
+	Version     string `json:"version"`
+	Filename    string `json:"filename"`
+	ExecutionMs int    `json:"execution_ms"`
+}
+
+// ApplyEventHandler receives successful per-migration apply events.
+type ApplyEventHandler func(ApplyEvent) error
+
 // RunUp applies all pending local migrations in order and records each success.
 func RunUp(ctx context.Context, pool *pgxpool.Pool, cfg *config.Config, dryRun bool) error {
 	return RunUpWithOptions(ctx, pool, cfg, dryRun, false)
@@ -44,6 +54,11 @@ func RunUp(ctx context.Context, pool *pgxpool.Pool, cfg *config.Config, dryRun b
 
 // RunUpWithOptions applies pending migrations with optional conflict bypass for reviewed --force flows.
 func RunUpWithOptions(ctx context.Context, pool *pgxpool.Pool, cfg *config.Config, dryRun bool, ignoreConflicts bool) error {
+	return RunUpWithEvents(ctx, pool, cfg, dryRun, ignoreConflicts, nil)
+}
+
+// RunUpWithEvents applies pending migrations and invokes onApplied after each committed migration.
+func RunUpWithEvents(ctx context.Context, pool *pgxpool.Pool, cfg *config.Config, dryRun bool, ignoreConflicts bool, onApplied ApplyEventHandler) error {
 	if cfg == nil {
 		return fmt.Errorf("running migrations up: config is required")
 	}
@@ -98,18 +113,24 @@ func RunUpWithOptions(ctx context.Context, pool *pgxpool.Pool, cfg *config.Confi
 			_ = tx.Rollback(ctx)
 			return fmt.Errorf("applying migration %s: %w", file.Version, err)
 		}
+		executionMs := int(time.Since(startedAt).Milliseconds())
 		if err := RecordApplied(ctx, tx, MigrationRecord{
 			Version:     file.Version,
 			Filename:    file.Filename,
 			Checksum:    file.Checksum,
 			AppliedBy:   cfg.Author,
-			ExecutionMs: int(time.Since(startedAt).Milliseconds()),
+			ExecutionMs: executionMs,
 		}); err != nil {
 			_ = tx.Rollback(ctx)
 			return err
 		}
 		if err := tx.Commit(ctx); err != nil {
 			return fmt.Errorf("committing migration %s transaction: %w", file.Version, err)
+		}
+		if onApplied != nil {
+			if err := onApplied(ApplyEvent{Version: file.Version, Filename: file.Filename, ExecutionMs: executionMs}); err != nil {
+				return fmt.Errorf("handling applied migration %s event: %w", file.Version, err)
+			}
 		}
 	}
 
