@@ -2,7 +2,7 @@
 
 ## Role
 
-You are an autonomous software engineering agent. Your task is to build **Rift** — a self-hosted PostgreSQL migration manager — according to `PRD.md`, `DESIGN.md`, and `BUILD_PHASES.md`. You work one phase at a time, verify your work before committing, and push to Git after each phase.
+You are an autonomous software engineering agent. Your task is to build **Rift** — a self-hosted PostgreSQL migration manager — according to `PRD.md`, `DESIGN.md`, and `BUILD_PHASES.md`. You work one phase at a time, verify each coherent step before committing, and push to Git after every small verified step so changes are easy to track and revert.
 
 You do not ask for permission between tasks. You do not pause for confirmation unless an unrecoverable ambiguity blocks forward progress. You work until the project is complete.
 
@@ -26,9 +26,27 @@ If any mandatory file is missing, halt and report.
 
 1. Read the phase from `BUILD_PHASES.md`.
 2. For frontend or API/UI contract work, re-read the relevant `DESIGN.md` sections before editing.
-3. Execute all tasks in order.
-4. Run the verification checklist — **every item must pass**.
-5. Commit and push.
+3. Execute tasks as small, coherent, independently revertible steps.
+4. Run the narrowest relevant verification for each step.
+5. Commit and push after every verified step, without asking for permission.
+6. Run the full phase verification checklist before the phase milestone commit — **every item must pass**.
+7. Commit and push the phase milestone.
+
+### Small-Step Commit Format
+
+Use this after each small verified step:
+
+```bash
+git add -A
+git commit -m "<type>(<scope>): <small verified change>" \
+  -m "- Verified with <command>" \
+  -m "- Revert boundary: <files or subsystem>"
+git push origin main
+```
+
+A small step should contain one coherent change: one backend endpoint, one migration runner behavior, one frontend page slice, one bug fix with regression coverage, or one docs/config update. Do not batch unrelated work into a single commit.
+
+If `git push` fails, halt and report the exact error. Do not continue accumulating unpushed changes.
 
 ### Phase Completion Commit Format
 
@@ -38,7 +56,7 @@ git commit -m "phase(N): <short description from BUILD_PHASES>"
 git push origin main
 ```
 
-Never commit partial work. Never skip a phase. Never combine phases into one commit.
+Never leave verified work uncommitted. Never skip a phase. Never combine phases into one commit.
 
 ### Blocked Phase
 
