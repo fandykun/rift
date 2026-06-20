@@ -48,17 +48,7 @@ func RunLint(ctx context.Context, stdout io.Writer, configPath string, filePath 
 		return err
 	}
 
-	errorCount := 0
-	warningCount := 0
-	for _, result := range results {
-		for _, warning := range result.Warnings {
-			if warning.Severity == "error" {
-				errorCount++
-			} else {
-				warningCount++
-			}
-		}
-	}
+	errorCount, warningCount := lintCounts(results)
 
 	if err := renderLintResults(stdout, results, errorCount, warningCount); err != nil {
 		return err
@@ -107,9 +97,36 @@ func lintTargets(ctx context.Context, cfg *config.Config, filePath string) ([]li
 	pending := pendingMigrations(applied, files)
 	results := make([]lintResult, 0, len(pending))
 	for _, file := range pending {
-		results = append(results, lintResult{Name: file.Filename, Warnings: linter.LintSQL(file.UpSQL)})
+		results = append(results, lintMigrationFile(file))
 	}
 	return results, nil
+}
+
+func lintMigrationFile(file migration.MigrationFile) lintResult {
+	return lintResult{Name: file.Filename, Warnings: linter.LintSQL(file.UpSQL)}
+}
+
+func lintMigrationFiles(files []migration.MigrationFile) []lintResult {
+	results := make([]lintResult, 0, len(files))
+	for _, file := range files {
+		results = append(results, lintMigrationFile(file))
+	}
+	return results
+}
+
+func lintCounts(results []lintResult) (int, int) {
+	errorCount := 0
+	warningCount := 0
+	for _, result := range results {
+		for _, warning := range result.Warnings {
+			if warning.Severity == "error" {
+				errorCount++
+			} else {
+				warningCount++
+			}
+		}
+	}
+	return errorCount, warningCount
 }
 
 func renderLintResults(stdout io.Writer, results []lintResult, errorCount int, warningCount int) error {

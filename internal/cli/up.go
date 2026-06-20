@@ -67,6 +67,8 @@ func RunUp(ctx context.Context, stdout io.Writer, configPath string, dryRun bool
 	}
 
 	pending := pendingMigrations(applied, files)
+	lintResults := lintMigrationFiles(pending)
+	lintErrors, lintWarnings := lintCounts(lintResults)
 	ok := color.New(color.FgGreen).SprintFunc()
 	warn := color.New(color.FgYellow).SprintFunc()
 
@@ -80,7 +82,22 @@ func RunUp(ctx context.Context, stdout io.Writer, configPath string, dryRun bool
 		for _, file := range pending {
 			fmt.Fprintf(stdout, "- %s\n", file.Filename)
 		}
+		if lintErrors > 0 || lintWarnings > 0 {
+			return renderLintResults(stdout, lintResults, lintErrors, lintWarnings)
+		}
 		return nil
+	}
+
+	if lintErrors > 0 && !force && !cfg.Linter.WarnOnly {
+		if err := renderLintResults(stdout, lintResults, lintErrors, lintWarnings); err != nil {
+			return err
+		}
+		return fmt.Errorf("linter found %d error(s); fix migration SQL or rerun with --force after manual review", lintErrors)
+	}
+	if lintErrors > 0 || lintWarnings > 0 {
+		if err := renderLintResults(stdout, lintResults, lintErrors, lintWarnings); err != nil {
+			return err
+		}
 	}
 
 	if len(conflicts) > 0 && force {

@@ -76,8 +76,11 @@ func RunDiff(ctx context.Context, stdout io.Writer, configPath string, schema st
 		return err
 	}
 
+	pending := pendingMigrations(applied, files)
+	lintResults := lintMigrationFiles(pending)
+	lintErrors, lintWarnings := lintCounts(lintResults)
 	expectedSnapshot := liveSnapshot
-	for _, file := range pendingMigrations(applied, files) {
+	for _, file := range pending {
 		expectedSnapshot, err = internaldiff.ApplyMigrationSQL(expectedSnapshot, file.UpSQL)
 		if err != nil {
 			return fmt.Errorf("applying pending migration %q to expected schema: %w", file.Filename, err)
@@ -93,8 +96,18 @@ func RunDiff(ctx context.Context, stdout io.Writer, configPath string, schema st
 		if _, err := stdout.Write(content); err != nil {
 			return fmt.Errorf("writing JSON diff output: %w", err)
 		}
-	} else if err := internaldiff.RenderTerminal(stdout, schemaDiff); err != nil {
-		return err
+	} else {
+		if err := internaldiff.RenderTerminal(stdout, schemaDiff); err != nil {
+			return err
+		}
+		if lintErrors > 0 || lintWarnings > 0 {
+			if _, err := fmt.Fprintln(stdout); err != nil {
+				return err
+			}
+			if err := renderLintResults(stdout, lintResults, lintErrors, lintWarnings); err != nil {
+				return err
+			}
+		}
 	}
 
 	if internaldiff.HasChanges(schemaDiff) {

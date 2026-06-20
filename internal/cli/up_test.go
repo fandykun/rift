@@ -84,6 +84,42 @@ func writeMigrationFile(t *testing.T, dir string, name string, content string) {
 	}
 }
 
+func TestRunUpLinterErrorsRequireForceIntegration(t *testing.T) {
+	configPath, databaseURL := setupUpLinterIntegration(t)
+
+	var stdout bytes.Buffer
+	err := RunUp(context.Background(), &stdout, configPath, false, false)
+	if err == nil || !strings.Contains(err.Error(), "linter found") {
+		t.Fatalf("expected linter error without force, got %v", err)
+	}
+	if !strings.Contains(stdout.String(), "DROP_COLUMN") {
+		t.Fatalf("expected lint output before blocking apply, got %q", stdout.String())
+	}
+
+	stdout.Reset()
+	if err := RunUp(context.Background(), &stdout, configPath, false, true); err != nil {
+		t.Fatalf("expected --force to apply despite linter errors, got %v", err)
+	}
+	if !strings.Contains(stdout.String(), "DROP_COLUMN") || !strings.Contains(stdout.String(), "OK applied") {
+		t.Fatalf("expected lint output and apply output with --force, got %q", stdout.String())
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	pool, err := db.NewPool(ctx, &config.Config{DatabaseURL: databaseURL})
+	if err != nil {
+		t.Fatalf("creating verification pool: %v", err)
+	}
+	defer pool.Close()
+	var columnCount int
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'legacy'`).Scan(&columnCount); err != nil {
+		t.Fatalf("checking dropped column: %v", err)
+	}
+	if columnCount != 0 {
+		t.Fatalf("expected legacy column to be dropped, got count %d", columnCount)
+	}
+}
+
 func TestRunUpConflictRequiresForceIntegration(t *testing.T) {
 	configPath, databaseURL := setupUpIntegration(t)
 
@@ -121,6 +157,40 @@ func TestRunUpConflictRequiresForceIntegration(t *testing.T) {
 	if !strings.Contains(stdout.String(), "WARN continuing despite 1 conflict") {
 		t.Fatalf("expected force warning, got %q", stdout.String())
 	}
+}
+
+func setupUpLinterIntegration(t *testing.T) (string, string) {
+	t.Helper()
+	databaseURL := os.Getenv("RIFT_TEST_DATABASE_URL")
+	if databaseURL == "" {
+		t.Skip("RIFT_TEST_DATABASE_URL is not set")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	pool, err := db.NewPool(ctx, &config.Config{DatabaseURL: databaseURL})
+	if err != nil {
+		t.Fatalf("creating setup pool: %v", err)
+	}
+	defer pool.Close()
+	if _, err := pool.Exec(ctx, `DROP TABLE IF EXISTS users CASCADE; DROP TABLE IF EXISTS _rift_migrations CASCADE; CREATE TABLE users (id BIGSERIAL PRIMARY KEY, legacy TEXT);`); err != nil {
+		t.Fatalf("resetting integration database: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	migrationsDir := filepath.Join(tmpDir, "migrations")
+	if err := os.MkdirAll(migrationsDir, 0o755); err != nil {
+		t.Fatalf("creating migrations dir: %v", err)
+	}
+	writeMigrationFile(t, migrationsDir, "20260620_160000_drop_legacy.up.sql", `ALTER TABLE users DROP COLUMN legacy;`)
+	writeMigrationFile(t, migrationsDir, "20260620_160000_drop_legacy.down.sql", `ALTER TABLE users ADD COLUMN legacy TEXT;`)
+
+	configPath := filepath.Join(tmpDir, "rift.yaml")
+	content := "database_url: " + databaseURL + "\nmigrations_dir: " + migrationsDir + "\nauthor: cli-test\n"
+	if err := os.WriteFile(configPath, []byte(content), 0o600); err != nil {
+		t.Fatalf("writing config: %v", err)
+	}
+	return configPath, databaseURL
 }
 
 func setupUpIntegration(t *testing.T) (string, string) {
