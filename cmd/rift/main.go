@@ -41,7 +41,7 @@ func newRootCommand() *cobra.Command {
 		cli.NewMigrationCommand(&configPath),
 		cli.NewUpCommand(&configPath),
 		cli.NewDownCommand(&configPath),
-		placeholderCommand("status", "Show applied and pending migrations"),
+		cli.NewStatusCommand(&configPath),
 		placeholderCommand("diff", "Compare pending migrations against the live database schema"),
 		placeholderCommand("server", "Start the Rift API server and embedded dashboard"),
 		placeholderCommand("lint", "Lint migration SQL for dangerous DDL patterns"),
