@@ -1,15 +1,33 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { Link, Outlet, useLocation } from 'react-router-dom'
 import { useAppStore } from '../stores/appStore'
 
-const navItems = [
-  { to: '/migrations', icon: 'dashboard', label: 'Dashboard' },
-  { to: '/migrations', icon: 'database_off', label: 'Migrations' },
-  { to: '/team', icon: 'group', label: 'Team' },
-  { to: '/settings', icon: 'settings', label: 'Settings' },
-]
+type NavItem = {
+  to: string
+  icon: string
+  label: string
+  isActive: (pathname: string) => boolean
+}
+
+function buildNavItems(pathname: string): NavItem[] {
+  const diffPath = /^\/migrations\/[^/]+\/diff$/.test(pathname) ? pathname : '/migrations'
+  return [
+    { to: '/', icon: 'dashboard', label: 'Dashboard', isActive: (path) => path === '/' },
+    {
+      to: '/migrations',
+      icon: 'database_off',
+      label: 'Migrations',
+      isActive: (path) => path === '/migrations' || /^\/migrations\/[^/]+$/.test(path),
+    },
+    { to: diffPath, icon: 'difference', label: 'Schema Diff', isActive: (path) => /^\/migrations\/[^/]+\/diff$/.test(path) },
+    { to: '/team', icon: 'group', label: 'Team', isActive: (path) => path === '/team' },
+    { to: '/settings', icon: 'settings', label: 'Settings', isActive: (path) => path === '/settings' },
+  ]
+}
 
 export function AppShell() {
   const environmentName = useAppStore((state) => state.environmentName)
+  const { pathname } = useLocation()
+  const navItems = buildNavItems(pathname)
 
   return (
     <main className="min-h-screen bg-background text-on-surface">
@@ -29,23 +47,24 @@ export function AppShell() {
         </div>
 
         <nav className="flex flex-1 flex-col gap-unit-1 font-body-md text-body-md">
-          {navItems.map((item) => (
-            <NavLink
-              key={`${item.to}-${item.label}`}
-              to={item.to}
-              className={({ isActive }) =>
-                [
+          {navItems.map((item) => {
+            const isActive = item.isActive(pathname)
+            return (
+              <Link
+                key={`${item.to}-${item.label}`}
+                to={item.to}
+                className={[
                   'flex cursor-pointer items-center gap-unit-2 rounded px-unit-2 py-2 transition-colors',
                   isActive
                     ? 'border-r-2 border-primary bg-primary-container/10 text-primary'
                     : 'text-on-surface-variant hover:bg-surface-variant hover:text-on-surface',
-                ].join(' ')
-              }
-            >
-              <span className="material-symbols-outlined">{item.icon}</span>
-              <span> {item.label}</span>
-            </NavLink>
-          ))}
+                ].join(' ')}
+              >
+                <span className="material-symbols-outlined">{item.icon}</span>
+                <span> {item.label}</span>
+              </Link>
+            )
+          })}
         </nav>
 
         <button className="mb-unit-4 flex w-full items-center justify-center gap-unit-2 rounded bg-primary py-2 font-body-md text-body-md font-medium text-on-primary transition-colors hover:bg-primary/90 active:scale-95">

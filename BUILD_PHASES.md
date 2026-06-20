@@ -321,11 +321,11 @@ No phase is skipped. No phase is merged unless its verification checklist passes
    - Notifications/Webhooks panel with Slack/Discord toggles and URL fields saved as config-only UI
 
 **Verification:**
-- [ ] Diff viewer shows correct local/live panes for a test migration
-- [ ] Diff viewer matches `DESIGN.md` split-pane headers, syntax colors, and line treatments
-- [ ] Linter warnings render with suggestion text in the apply confirmation flow
-- [ ] SSE apply stream shows live log lines as they arrive and completes with success/error state
-- [ ] Team page shows conflicts, deployment timeline, team members, and webhook fields
+- [x] Diff viewer shows correct local/live panes for a test migration
+- [x] Diff viewer matches `DESIGN.md` split-pane headers, syntax colors, and line treatments
+- [x] Linter warnings render with suggestion text in the apply confirmation flow
+- [x] SSE apply stream shows live log lines as they arrive and completes with success/error state
+- [x] Team page shows conflicts, deployment timeline, team members, and webhook fields
 
 **Commit:** `phase(8): schema diff viewer UI, SSE apply flow, team deployment page`
 

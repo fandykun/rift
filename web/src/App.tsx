@@ -1,15 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/AppShell'
 import { MigrationDetailPage } from './pages/MigrationDetailPage'
+import { MigrationDiffPage } from './pages/MigrationDiffPage'
 import { MigrationsPage } from './pages/MigrationsPage'
-
-function MigrationDiffPage() {
-  return <div className="font-body-md text-body-md text-on-surface">Schema diff</div>
-}
-
-function TeamPage() {
-  return <div className="font-body-md text-body-md text-on-surface">Team</div>
-}
+import { TeamPage } from './pages/TeamPage'
 
 function SettingsPage() {
   return <div className="font-body-md text-body-md text-on-surface">Settings</div>
