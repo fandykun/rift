@@ -3,11 +3,8 @@ import { AppShell } from './components/AppShell'
 import { MigrationDetailPage } from './pages/MigrationDetailPage'
 import { MigrationDiffPage } from './pages/MigrationDiffPage'
 import { MigrationsPage } from './pages/MigrationsPage'
+import { SettingsPage } from './pages/SettingsPage'
 import { TeamPage } from './pages/TeamPage'
-
-function SettingsPage() {
-  return <div className="font-body-md text-body-md text-on-surface">Settings</div>
-}
 
 function App() {
   return (
