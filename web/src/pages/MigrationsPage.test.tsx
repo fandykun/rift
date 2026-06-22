@@ -91,4 +91,18 @@ describe('MigrationsPage', () => {
 
     await waitFor(() => expect(useAppStore.getState().environmentName).toBe('test'))
   })
+
+  it('renders the empty-state guidance when the API returns no migrations', async () => {
+    vi.mocked(fetchStatus).mockResolvedValue({
+      environment: 'test',
+      counts: { total: 0, applied: 0, pending: 0, rolled_back: 0 },
+    })
+    vi.mocked(fetchMigrations).mockResolvedValue([])
+    vi.mocked(fetchLint).mockResolvedValue({ error_count: 0, warning_count: 0, results: [] })
+
+    renderWithProviders()
+
+    expect(await screen.findByText('No migrations yet')).not.toBeNull()
+    expect(screen.getByText('rift new add_users')).not.toBeNull()
+  })
 })

@@ -406,11 +406,11 @@ No phase is skipped. No phase is merged unless its verification checklist passes
    - Dark mode toggle (Tailwind `dark:` classes + localStorage)
 
 **Verification:**
-- [ ] `go test ./...` passes with 0 failures
-- [ ] `cd web && npm run test` passes with 0 failures
-- [ ] `./rift --version` prints correct version
+- [x] `go test ./...` passes with 0 failures
+- [x] `cd web && npm run test` passes with 0 failures
+- [x] `./rift --version` prints correct version
 - [ ] README quickstart works end-to-end from a fresh clone
-- [ ] Empty state renders on migrations page when DB has no migrations
+- [x] Empty state renders on migrations page when DB has no migrations
 - [ ] UI remains visually consistent with `DESIGN.md` across dashboard, authoring, diff, team, and settings routes
 
 **Commit:** `phase(10): tests, README, CLI polish, UI empty states, dark mode`
