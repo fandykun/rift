@@ -12,7 +12,9 @@ COPY go.mod go.sum ./
 RUN go mod download
 COPY . ./
 COPY --from=web-build /src/web/dist ./internal/embed/ui
-RUN go build -o /out/rift ./cmd/rift
+ARG VERSION=0.1.0-dev
+ARG BUILD_COMMIT=unknown
+RUN go build -ldflags "-X main.version=${VERSION} -X main.buildCommit=${BUILD_COMMIT}" -o /out/rift ./cmd/rift
 
 FROM alpine:3.19 AS runtime
 WORKDIR /app

@@ -14,7 +14,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const version = "0.1.0-dev"
+var (
+	version     = "0.1.0-dev"
+	buildCommit = "unknown"
+)
 
 func main() {
 	if err := newRootCommand().Execute(); err != nil {
@@ -34,7 +37,7 @@ func newRootCommand() *cobra.Command {
 		Use:           "rift",
 		Short:         "Self-hosted PostgreSQL migration manager",
 		Long:          "Rift is a CLI and web dashboard for authoring, previewing, applying, and auditing PostgreSQL migrations.",
-		Version:       version,
+		Version:       fmt.Sprintf("%s (commit %s)", version, buildCommit),
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
