@@ -1,4 +1,4 @@
-FROM node:24-alpine AS web-build
+FROM node:20-alpine AS web-build
 WORKDIR /src/web
 COPY web/package*.json ./
 RUN npm ci
@@ -14,9 +14,9 @@ COPY . ./
 COPY --from=web-build /src/web/dist ./internal/embed/ui
 RUN go build -o /out/rift ./cmd/rift
 
-FROM alpine:3.20 AS runtime
+FROM alpine:3.19 AS runtime
 WORKDIR /app
-RUN addgroup -S rift && adduser -S rift -G rift
+RUN addgroup -S rift && adduser -S rift -G rift && mkdir -p /app/migrations && chown -R rift:rift /app
 COPY --from=go-build /out/rift ./rift
 USER rift
 EXPOSE 7878

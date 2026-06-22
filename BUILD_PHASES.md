@@ -362,11 +362,11 @@ No phase is skipped. No phase is merged unless its verification checklist passes
    - Verify dashboard, SQL authoring interface, diff viewer, team page, and settings page all work from Docker
 
 **Verification:**
-- [ ] `make build` produces a single binary with embedded UI
-- [ ] `./rift server` serves UI at `localhost:7878` and API at `localhost:7878/api/v1/`
-- [ ] `docker compose up` works end-to-end against a fresh postgres container
-- [ ] Settings page saves token and persists across page refresh
-- [ ] Direct SPA routes for `/team` and `/migrations/:version/diff` work when served from the binary
+- [x] `make build` produces a single binary with embedded UI
+- [x] `./rift server` serves UI at `localhost:7878` and API at `localhost:7878/api/v1/`
+- [x] `docker compose up` works end-to-end against a fresh postgres container
+- [x] Settings page saves token and persists across page refresh
+- [x] Direct SPA routes for `/team` and `/migrations/:version/diff` work when served from the binary
 
 **Commit:** `phase(9): settings UI, go:embed single binary, Dockerfile, docker-compose validation`
 

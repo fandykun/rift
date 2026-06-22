@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: rift
       POSTGRES_PASSWORD: rift_dev_password
     ports:
-      - "5432:5432"
+      - "15432:5432"
     volumes:
       - rift-postgres-data:/var/lib/postgresql/data
     healthcheck:
