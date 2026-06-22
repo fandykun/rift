@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { useAppStore } from '../stores/appStore'
 
@@ -26,8 +27,14 @@ function buildNavItems(pathname: string): NavItem[] {
 
 export function AppShell() {
   const environmentName = useAppStore((state) => state.environmentName)
+  const theme = useAppStore((state) => state.theme)
+  const toggleTheme = useAppStore((state) => state.toggleTheme)
   const { pathname } = useLocation()
   const navItems = buildNavItems(pathname)
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark')
+  }, [theme])
 
   return (
     <main className="min-h-screen bg-background text-on-surface">
@@ -85,6 +92,15 @@ export function AppShell() {
             <span>Rift</span>
           </div>
           <div className="flex items-center gap-unit-2">
+            <button
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              className="flex items-center gap-unit-2 rounded border border-outline-variant px-3 py-1.5 font-label-caps text-label-caps uppercase text-on-surface transition-colors hover:bg-surface-variant"
+              type="button"
+              onClick={toggleTheme}
+            >
+              <span className="material-symbols-outlined text-[18px]">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
+              {theme === 'dark' ? 'Light' : 'Dark'} Mode
+            </button>
             <button className="rounded border border-outline-variant px-3 py-1.5 font-label-caps text-label-caps uppercase text-on-surface transition-colors hover:bg-surface-variant">
               Preview Changes
             </button>

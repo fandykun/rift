@@ -3,25 +3,124 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   font-family: Inter, sans-serif;
-  background: #10131a;
-  color: #e1e2ec;
+  background: rgb(var(--color-background));
+  color: rgb(var(--color-on-surface));
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --color-background: 248 250 252;
+  --color-surface: 248 250 252;
+  --color-surface-dim: 226 232 240;
+  --color-surface-container-lowest: 255 255 255;
+  --color-surface-container-low: 241 245 249;
+  --color-surface-container: 255 255 255;
+  --color-surface-container-high: 241 245 249;
+  --color-surface-container-highest: 226 232 240;
+  --color-surface-bright: 255 255 255;
+  --color-surface-variant: 226 232 240;
+  --color-on-surface: 15 23 42;
+  --color-on-surface-variant: 71 85 105;
+  --color-on-background: 15 23 42;
+  --color-outline: 100 116 139;
+  --color-outline-variant: 203 213 225;
+  --color-primary: 0 90 194;
+  --color-on-primary: 255 255 255;
+  --color-primary-container: 216 226 255;
+  --color-on-primary-container: 0 26 66;
+  --color-primary-fixed: 216 226 255;
+  --color-primary-fixed-dim: 173 198 255;
+  --color-on-primary-fixed: 0 26 66;
+  --color-on-primary-fixed-variant: 0 67 149;
+  --color-inverse-primary: 173 198 255;
+  --color-surface-tint: 0 90 194;
+  --color-secondary: 0 105 72;
+  --color-on-secondary: 255 255 255;
+  --color-secondary-container: 111 251 190;
+  --color-on-secondary-container: 0 33 19;
+  --color-secondary-fixed: 111 251 190;
+  --color-secondary-fixed-dim: 78 222 163;
+  --color-on-secondary-fixed: 0 33 19;
+  --color-on-secondary-fixed-variant: 0 82 54;
+  --color-tertiary: 141 83 0;
+  --color-on-tertiary: 255 255 255;
+  --color-tertiary-container: 255 221 184;
+  --color-on-tertiary-container: 42 23 0;
+  --color-tertiary-fixed: 255 221 184;
+  --color-tertiary-fixed-dim: 255 185 95;
+  --color-on-tertiary-fixed: 42 23 0;
+  --color-on-tertiary-fixed-variant: 101 62 0;
+  --color-error: 186 26 26;
+  --color-on-error: 255 255 255;
+  --color-error-container: 255 218 214;
+  --color-on-error-container: 65 0 2;
+  --color-inverse-surface: 46 48 56;
+  --color-inverse-on-surface: 225 226 236;
+}
+
+:root.dark {
+  color-scheme: dark;
+  --color-background: 16 19 26;
+  --color-surface: 16 19 26;
+  --color-surface-dim: 16 19 26;
+  --color-surface-container-lowest: 11 14 21;
+  --color-surface-container-low: 25 27 35;
+  --color-surface-container: 29 32 39;
+  --color-surface-container-high: 39 42 49;
+  --color-surface-container-highest: 50 53 60;
+  --color-surface-bright: 54 57 65;
+  --color-surface-variant: 50 53 60;
+  --color-on-surface: 225 226 236;
+  --color-on-surface-variant: 194 198 214;
+  --color-on-background: 225 226 236;
+  --color-outline: 140 144 159;
+  --color-outline-variant: 66 71 84;
+  --color-primary: 173 198 255;
+  --color-on-primary: 0 46 106;
+  --color-primary-container: 77 142 255;
+  --color-on-primary-container: 0 40 93;
+  --color-primary-fixed: 216 226 255;
+  --color-primary-fixed-dim: 173 198 255;
+  --color-on-primary-fixed: 0 26 66;
+  --color-on-primary-fixed-variant: 0 67 149;
+  --color-inverse-primary: 0 90 194;
+  --color-surface-tint: 173 198 255;
+  --color-secondary: 78 222 163;
+  --color-on-secondary: 0 56 36;
+  --color-secondary-container: 0 165 114;
+  --color-on-secondary-container: 0 49 31;
+  --color-secondary-fixed: 111 251 190;
+  --color-secondary-fixed-dim: 78 222 163;
+  --color-on-secondary-fixed: 0 33 19;
+  --color-on-secondary-fixed-variant: 0 82 54;
+  --color-tertiary: 255 185 95;
+  --color-on-tertiary: 71 42 0;
+  --color-tertiary-container: 202 129 0;
+  --color-on-tertiary-container: 62 36 0;
+  --color-tertiary-fixed: 255 221 184;
+  --color-tertiary-fixed-dim: 255 185 95;
+  --color-on-tertiary-fixed: 42 23 0;
+  --color-on-tertiary-fixed-variant: 101 62 0;
+  --color-error: 255 180 171;
+  --color-on-error: 105 0 5;
+  --color-error-container: 147 0 10;
+  --color-on-error-container: 255 218 214;
+  --color-inverse-surface: 225 226 236;
+  --color-inverse-on-surface: 46 48 56;
 }
 
 html {
   min-height: 100%;
-  background: #10131a;
+  background: rgb(var(--color-background));
 }
 
 body {
   min-height: 100vh;
   margin: 0;
-  background: #10131a;
+  background: rgb(var(--color-background));
 }
 
 #root {
