@@ -104,11 +104,14 @@ func RunUp(ctx context.Context, stdout io.Writer, configPath string, dryRun bool
 		fmt.Fprintf(stdout, "%s continuing despite %d conflict(s) because --force was set\n", warn("WARN"), len(conflicts))
 	}
 
-	if err := migration.RunUpWithOptions(ctx, pool, cfg, false, force); err != nil {
+	spinner := startTerminalSpinner(stdout, fmt.Sprintf("applying %d pending migration(s)", len(pending)))
+	defer spinner.stop()
+
+	if err := migration.RunUpWithEvents(ctx, pool, cfg, false, force, func(event migration.ApplyEvent) error {
+		spinner.printLine("%s applied %s (%dms)\n", ok("OK"), event.Filename, event.ExecutionMs)
+		return nil
+	}); err != nil {
 		return err
-	}
-	for _, file := range pending {
-		fmt.Fprintf(stdout, "%s applied %s\n", ok("OK"), file.Filename)
 	}
 	return nil
 }
