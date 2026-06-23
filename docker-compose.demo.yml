@@ -1,0 +1,25 @@
+services:
+  rift:
+    environment:
+      RIFT_ENV: demo
+      RIFT_MIGRATIONS_DIR: /app/demo-migrations
+    volumes:
+      - ./demo/migrations:/app/demo-migrations:ro
+
+  demo-seed:
+    profiles: ["seed"]
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    command: ["up"]
+    environment:
+      RIFT_ENV: demo
+      RIFT_DATABASE_URL: postgres://rift:rift_dev_password@postgres:5432/rift?sslmode=disable
+      RIFT_MIGRATIONS_DIR: /app/demo-migrations
+      RIFT_TOKEN: local-dev-token
+    volumes:
+      - ./demo/migrations:/app/demo-migrations:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"

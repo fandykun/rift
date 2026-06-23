@@ -70,6 +70,41 @@ Stop the stack:
 docker compose down
 ```
 
+## Demo deployment with dummy data
+
+Use the demo Compose overlay when you want a populated Rift dashboard instead of an empty first-run database:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.demo.yml up -d --build --wait
+docker compose -f docker-compose.yml -f docker-compose.demo.yml --profile seed run --rm demo-seed
+```
+
+The overlay mounts `demo/migrations` into the Rift container. The one-shot `demo-seed` service applies three sample migrations:
+
+- `demo_customers` — customer accounts across free, team, and enterprise plans.
+- `demo_projects` — projects linked to customers with a `NOT VALID` foreign key.
+- `demo_deployment_audit` — example deployment audit rows.
+
+Verify the seeded API state:
+
+```bash
+RIFT_TOKEN=local-dev-token
+AUTH_SCHEME=Bearer
+curl --header "Authorization: ${AUTH_SCHEME} ${RIFT_TOKEN}" http://localhost:7878/api/v1/status
+```
+
+Expected counts after the seed service completes:
+
+```json
+{"environment":"demo","counts":{"applied":3,"pending":0,"rolled_back":0,"total":3}}
+```
+
+Stop the demo stack:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.demo.yml down
+```
+
 ## CLI reference
 
 Rift reads configuration from `rift.yaml`, with environment variable overrides such as `RIFT_DATABASE_URL`, `RIFT_MIGRATIONS_DIR`, `RIFT_PORT`, and `RIFT_TOKEN`.
