@@ -60,8 +60,8 @@ Check the API directly:
 
 ```bash
 RIFT_TOKEN=local-dev-token
-curl -H "Authorization: Bearer ${RIFT_TOKEN}" \
-  http://localhost:7878/api/v1/status
+AUTH_SCHEME=Bearer
+curl --header "Authorization: ${AUTH_SCHEME} ${RIFT_TOKEN}" http://localhost:7878/api/v1/status
 ```
 
 Stop the stack:
@@ -207,7 +207,7 @@ docker/               Dockerfile for single-binary runtime
 
 ## Status
 
-Rift is currently implemented through Phase 9 of `BUILD_PHASES.md`:
+Rift is currently implemented through Phase 10 of `BUILD_PHASES.md`:
 
 - CLI migration workflow
 - API server
@@ -218,8 +218,10 @@ Rift is currently implemented through Phase 9 of `BUILD_PHASES.md`:
 - settings page
 - single binary embed
 - Docker Compose deployment
-
-Phase 10 focuses on final test coverage, README polish, CLI polish, and UI empty/loading/dark-mode refinements.
+- React/Go tests
+- README quickstart
+- CLI progress/version polish
+- UI empty states and theme toggle
 
 ## Contributing
 
