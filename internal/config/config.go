@@ -81,10 +81,10 @@ func Load(path string) (*Config, error) {
 	if value := os.Getenv("RIFT_MIGRATIONS_DIR"); value != "" {
 		cfg.MigrationsDir = value
 	}
-	if value := os.Getenv("RIFT_PORT"); value != "" {
+	if value := firstNonEmptyEnv("RIFT_PORT", "PORT"); value != "" {
 		port, err := strconv.Atoi(value)
 		if err != nil || port <= 0 || port > 65535 {
-			return nil, fmt.Errorf("RIFT_PORT must be a valid TCP port, got %q", value)
+			return nil, fmt.Errorf("RIFT_PORT/PORT must be a valid TCP port, got %q", value)
 		}
 		cfg.Server.Port = port
 	}
@@ -93,4 +93,13 @@ func Load(path string) (*Config, error) {
 	}
 
 	return &cfg, nil
+}
+
+func firstNonEmptyEnv(keys ...string) string {
+	for _, key := range keys {
+		if value := os.Getenv(key); value != "" {
+			return value
+		}
+	}
+	return ""
 }

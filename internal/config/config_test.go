@@ -11,6 +11,7 @@ func TestLoadUsesDefaultsWhenFileMissing(t *testing.T) {
 	t.Setenv("RIFT_ENV", "")
 	t.Setenv("RIFT_MIGRATIONS_DIR", "")
 	t.Setenv("RIFT_PORT", "")
+	t.Setenv("PORT", "")
 	t.Setenv("RIFT_TOKEN", "")
 
 	cfg, err := Load(filepath.Join(t.TempDir(), "missing.yaml"))
@@ -53,6 +54,7 @@ team:
 	t.Setenv("RIFT_ENV", "production")
 	t.Setenv("RIFT_MIGRATIONS_DIR", "./env-migrations")
 	t.Setenv("RIFT_PORT", "9000")
+	t.Setenv("PORT", "9100")
 	t.Setenv("RIFT_TOKEN", "env-token")
 
 	cfg, err := Load(path)
@@ -83,6 +85,19 @@ team:
 	}
 	if len(cfg.Team) != 1 || cfg.Team[0].Email != "fandy@example.com" || cfg.Team[0].Role != "admin" {
 		t.Fatalf("Team = %+v", cfg.Team)
+	}
+}
+
+func TestLoadUsesPortFallbackForPaaS(t *testing.T) {
+	t.Setenv("RIFT_PORT", "")
+	t.Setenv("PORT", "9191")
+
+	cfg, err := Load("")
+	if err != nil {
+		t.Fatalf("Load returned error: %v", err)
+	}
+	if cfg.Server.Port != 9191 {
+		t.Fatalf("Server.Port = %d, want 9191", cfg.Server.Port)
 	}
 }
 
