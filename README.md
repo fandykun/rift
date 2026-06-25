@@ -72,7 +72,7 @@ docker compose down
 
 ## Demo deployment with dummy data
 
-Use the demo Compose overlay when you want a populated Rift dashboard instead of an empty first-run database:
+Use the demo Compose overlay when you want a populated Rift dashboard instead of an empty first-run database. For public Railway/Render-style deployment, see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.demo.yml up -d --build --wait
