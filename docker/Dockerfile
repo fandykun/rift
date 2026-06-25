@@ -18,8 +18,9 @@ RUN go build -ldflags "-X main.version=${VERSION} -X main.buildCommit=${BUILD_CO
 
 FROM alpine:3.19 AS runtime
 WORKDIR /app
-RUN addgroup -S rift && adduser -S rift -G rift && mkdir -p /app/migrations && chown -R rift:rift /app
+RUN addgroup -S rift && adduser -S rift -G rift && mkdir -p /app/migrations /app/demo-migrations && chown -R rift:rift /app
 COPY --from=go-build /out/rift ./rift
+COPY --from=go-build --chown=rift:rift /src/demo/migrations ./demo-migrations
 USER rift
 EXPOSE 7878
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD port="${RIFT_PORT:-${PORT:-7878}}" && wget -qO- "http://127.0.0.1:${port}/healthz" >/dev/null || exit 1
