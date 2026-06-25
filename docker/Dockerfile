@@ -22,5 +22,6 @@ RUN addgroup -S rift && adduser -S rift -G rift && mkdir -p /app/migrations && c
 COPY --from=go-build /out/rift ./rift
 USER rift
 EXPOSE 7878
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD port="${RIFT_PORT:-${PORT:-7878}}" && wget -qO- "http://127.0.0.1:${port}/healthz" >/dev/null || exit 1
 ENTRYPOINT ["./rift"]
 CMD ["server"]

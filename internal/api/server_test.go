@@ -15,6 +15,21 @@ import (
 	"github.com/fandykun/rift/internal/migration"
 )
 
+func TestHealthEndpointDoesNotRequireAuth(t *testing.T) {
+	router := NewServer(&config.Config{Environment: "test", Server: config.ServerConfig{Token: "secret"}}, nil)
+	request := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", response.Code, response.Body.String())
+	}
+	if !strings.Contains(response.Body.String(), `"status":"ok"`) || !strings.Contains(response.Body.String(), `"environment":"test"`) {
+		t.Fatalf("expected health JSON, got %s", response.Body.String())
+	}
+}
+
 func TestAuthMiddlewareRejectsMissingToken(t *testing.T) {
 	router := NewServer(&config.Config{Server: config.ServerConfig{Token: "secret"}}, nil)
 	request := httptest.NewRequest(http.MethodGet, "/api/v1/status", nil)

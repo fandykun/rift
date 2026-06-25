@@ -29,6 +29,7 @@ func NewServer(cfg *config.Config, pool *pgxpool.Pool) *chi.Mux {
 	router.Use(middleware.Recoverer)
 
 	server := &server{cfg: cfg, pool: pool}
+	router.Get("/healthz", server.handleHealth)
 	router.Route("/api/v1", func(r chi.Router) {
 		r.Use(server.authMiddleware)
 		r.Get("/status", server.handleStatus)
@@ -64,6 +65,11 @@ type apiCounts struct {
 	Total      int `json:"total"`
 }
 
+type healthResponse struct {
+	Status      string `json:"status"`
+	Environment string `json:"environment,omitempty"`
+}
+
 type migrationResponse struct {
 	Version     string     `json:"version"`
 	Filename    string     `json:"filename"`
@@ -94,6 +100,14 @@ type migrateDownRequest struct {
 type migrateDownResponse struct {
 	Status string `json:"status"`
 	Steps  int    `json:"steps"`
+}
+
+func (s *server) handleHealth(w http.ResponseWriter, r *http.Request) {
+	response := healthResponse{Status: "ok"}
+	if s.cfg != nil {
+		response.Environment = s.cfg.Environment
+	}
+	writeJSON(w, http.StatusOK, response)
 }
 
 func (s *server) handleStatus(w http.ResponseWriter, r *http.Request) {
