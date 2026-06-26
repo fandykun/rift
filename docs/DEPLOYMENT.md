@@ -134,14 +134,18 @@ RIFT_TOKEN=<strong-token>
 Before exposing a production database, verify locally or in staging:
 
 ```bash
+./rift config doctor
 ./rift config check
 ./rift lint
 ./rift status
 ./rift diff
 ```
 
+Use `./rift config doctor --skip-db` only for build-time checks where the database is intentionally unavailable; public runtime validation should include the database connectivity check.
+
 ## Public access checklist
 
+- [ ] `./rift config doctor` passes in the target environment.
 - [ ] `RIFT_TOKEN` is a strong generated value.
 - [ ] `RIFT_DATABASE_URL` comes from platform secrets, not git.
 - [ ] `/healthz` returns `200` without auth.

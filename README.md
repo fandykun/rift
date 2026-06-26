@@ -118,6 +118,7 @@ Rift reads configuration from `rift.yaml`, with environment variable overrides s
 | `rift up [--dry-run] [--force]` | Apply pending migrations with advisory locking and linter checks. |
 | `rift down [--steps N]` | Roll back the latest applied migrations after confirmation. |
 | `rift config check` | Validate config loading and database connectivity. |
+| `rift config doctor [--skip-db]` | Run deployment readiness checks without printing secrets. |
 | `rift server` | Start the API server and embedded dashboard. |
 | `rift --version` | Print the version and build commit. |
 
@@ -153,6 +154,22 @@ Environment variables override the file:
 | `RIFT_MIGRATIONS_DIR` | Directory containing migration files. |
 | `RIFT_PORT` | HTTP server port. |
 | `RIFT_TOKEN` | Bearer token required for API requests. |
+
+### Deployment readiness doctor
+
+Before exposing Rift publicly, run:
+
+```bash
+./rift config doctor
+```
+
+For CI or platform build checks where the database is not reachable yet, use:
+
+```bash
+./rift config doctor --skip-db
+```
+
+The doctor verifies the environment label, server port, database URL shape, token safety, migrations directory, and database connectivity without printing secrets.
 
 ## Architecture
 

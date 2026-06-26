@@ -46,6 +46,7 @@ Existing tools (Flyway, Liquibase, golang-migrate) solve the core sequencing pro
 - Built-in linter flagging dangerous DDL patterns with safer alternatives
 - Single binary deployment with embedded React UI (`go:embed`)
 - Docker support for self-hosted server mode
+- Deployment readiness checks with `rift config doctor` for public/demo environments
 - SQLite for local config/state when running in CLI-only mode
 
 ### Non-Goals (v1)
@@ -72,6 +73,7 @@ rift down               # roll back last applied migration (with confirmation pr
 rift down --steps 3     # roll back last 3 migrations
 rift status             # show applied/pending migration list
 rift diff               # compare migration files against live DB schema
+rift config doctor      # check deployment readiness without printing secrets
 ```
 
 Each migration file pair (`up.sql` / `down.sql`) uses a timestamp prefix for strict ordering. The CLI reads config from `rift.yaml` or environment variables.

@@ -414,3 +414,30 @@ No phase is skipped. No phase is merged unless its verification checklist passes
 - [x] UI remains visually consistent with `DESIGN.md` across dashboard, authoring, diff, team, and settings routes
 
 **Commit:** `phase(10): tests, README, CLI polish, UI empty states, dark mode`
+
+---
+
+## Phase 11 — Public Deployment Readiness
+
+**Goal:** Improve Rift for public demo and PaaS deployment without changing the Phase 0–10 MVP workflow.
+
+**Tasks:**
+1. Add `rift config doctor`:
+   - Loads the same `rift.yaml` + environment overrides as the rest of the CLI.
+   - Checks environment label, HTTP port, PostgreSQL URL shape, API token safety, migrations directory accessibility, and optional live database connectivity.
+   - Never prints `RIFT_TOKEN` or database credentials.
+   - Supports `--skip-db` for build-time/platform checks where the database is intentionally unavailable.
+2. Update public deployment docs to recommend `./rift config doctor` before exposing a URL.
+3. Update PRD and README CLI references so deployment readiness is tracked as a product feature.
+4. Keep demo deployment compatibility with `/app/demo-migrations` and the existing Compose overlay.
+
+**Verification:**
+- [x] `go test ./cmd/rift` covers doctor pass/fail cases and secret redaction
+- [x] `./rift config doctor --skip-db` reports public-readiness checks without printing secrets
+- [x] `go test ./...` passes with 0 failures
+- [x] `cd web && npm run test` passes with 0 failures
+- [x] `cd web && npm run lint` passes with 0 failures
+- [x] `cd web && npm run build` succeeds
+- [x] `make build && ./rift --version` produces a single binary
+
+**Commit:** `phase(11): public deployment readiness doctor`

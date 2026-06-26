@@ -83,6 +83,17 @@ func newConfigCommand(configPath *string) *cobra.Command {
 		},
 	})
 
+	var skipDB bool
+	doctorCmd := &cobra.Command{
+		Use:   "doctor",
+		Short: "Run deployment readiness checks without printing secrets",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runConfigDoctor(cmd.Context(), cmd.OutOrStdout(), *configPath, skipDB)
+		},
+	}
+	doctorCmd.Flags().BoolVar(&skipDB, "skip-db", false, "skip live database connectivity check")
+	configCmd.AddCommand(doctorCmd)
+
 	return configCmd
 }
 

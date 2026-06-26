@@ -359,16 +359,17 @@ Implement each pattern as a regex scan over the SQL string (case-insensitive):
 
 The project is complete when:
 
-- [ ] All 10 phases are committed and pushed
-- [ ] `go test ./...` passes with 0 failures
-- [ ] `cd web && npm run test` passes with 0 failures
-- [ ] `make build` produces a single `./rift` binary with embedded UI
-- [ ] `docker compose up` brings up Rift + Postgres and serves the dashboard
-- [ ] Frontend routes match the `DESIGN.md` mockup-backed layouts and token system
-- [ ] `rift up`, `rift down`, `rift diff`, `rift status`, `rift lint` all work correctly against a real PostgreSQL database
-- [ ] The schema diff viewer correctly identifies and displays changes for at least: CREATE TABLE, ALTER TABLE ADD COLUMN, ALTER TABLE DROP COLUMN, CREATE INDEX
-- [ ] The linter correctly flags all 6 dangerous patterns
-- [ ] README has a working 5-minute quickstart
+- [x] All 10 phases are committed and pushed
+- [x] `go test ./...` passes with 0 failures
+- [x] `cd web && npm run test` passes with 0 failures
+- [x] `make build` produces a single `./rift` binary with embedded UI
+- [x] `docker compose up` brings up Rift + Postgres and serves the dashboard
+- [x] Frontend routes match the `DESIGN.md` mockup-backed layouts and token system
+- [x] `rift up`, `rift down`, `rift diff`, `rift status`, `rift lint` all work correctly against a real PostgreSQL database
+- [x] `rift config doctor` validates deployment readiness without printing secrets
+- [x] The schema diff viewer correctly identifies and displays changes for at least: CREATE TABLE, ALTER TABLE ADD COLUMN, ALTER TABLE DROP COLUMN, CREATE INDEX
+- [x] The linter correctly flags all 6 dangerous patterns
+- [x] README has a working 5-minute quickstart
 
 ---
 
