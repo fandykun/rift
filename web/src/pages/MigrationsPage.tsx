@@ -20,6 +20,8 @@ export function MigrationsPage() {
   const setEnvironmentName = useAppStore((state) => state.setEnvironmentName)
   const [draftToken, setDraftToken] = useState(token)
   const [searchTerm, setSearchTerm] = useState('')
+  const [quickActionMessage, setQuickActionMessage] = useState<{ kind: 'connect' | 'sync' | 'error'; text: string }>()
+  const [quickActionLoading, setQuickActionLoading] = useState<'connect' | 'sync'>()
 
   const [statusQuery, migrationsQuery, lintQuery] = useQueries({
     queries: [
@@ -63,6 +65,55 @@ export function MigrationsPage() {
       ),
     )
   }, [migrations, searchTerm])
+
+  async function connectToDatabase() {
+    setQuickActionLoading('connect')
+    setQuickActionMessage(undefined)
+    try {
+      const result = await statusQuery.refetch()
+      if (result.error instanceof Error) {
+        throw result.error
+      }
+      const latestStatus = result.data as StatusResponse | undefined
+      if (latestStatus?.environment) {
+        setEnvironmentName(latestStatus.environment)
+      }
+      setQuickActionMessage({
+        kind: 'connect',
+        text: `Database connection OK${latestStatus?.environment ? ` · ${latestStatus.environment}` : ''}`,
+      })
+    } catch (error) {
+      setQuickActionMessage({ kind: 'error', text: error instanceof Error ? error.message : 'Database connection check failed.' })
+    } finally {
+      setQuickActionLoading(undefined)
+    }
+  }
+
+  async function syncLocalFiles() {
+    setQuickActionLoading('sync')
+    setQuickActionMessage(undefined)
+    try {
+      const [latestStatus, latestMigrations, latestLint] = await Promise.all([
+        statusQuery.refetch(),
+        migrationsQuery.refetch(),
+        lintQuery.refetch(),
+      ])
+      const firstError = latestStatus.error ?? latestMigrations.error ?? latestLint.error
+      if (firstError instanceof Error) {
+        throw firstError
+      }
+      const syncedMigrations = (latestMigrations.data as Migration[] | undefined) ?? []
+      const syncedLint = (latestLint.data as LintResponse | undefined) ?? { error_count: 0, warning_count: 0, results: [] }
+      setQuickActionMessage({
+        kind: 'sync',
+        text: `Synced ${syncedMigrations.length} migration${syncedMigrations.length === 1 ? '' : 's'} · ${syncedLint.error_count + syncedLint.warning_count} lint finding${syncedLint.error_count + syncedLint.warning_count === 1 ? '' : 's'}`,
+      })
+    } catch (error) {
+      setQuickActionMessage({ kind: 'error', text: error instanceof Error ? error.message : 'Sync failed.' })
+    } finally {
+      setQuickActionLoading(undefined)
+    }
+  }
 
   if (!token) {
     return (
@@ -128,7 +179,15 @@ export function MigrationsPage() {
         </section>
 
         <aside className="space-y-unit-4 xl:col-span-4">
-          <QuickActionsCard />
+          <QuickActionsCard
+            connectMessage={quickActionMessage?.kind === 'connect' ? quickActionMessage.text : undefined}
+            errorMessage={quickActionMessage?.kind === 'error' ? quickActionMessage.text : undefined}
+            isConnecting={quickActionLoading === 'connect'}
+            isSyncing={quickActionLoading === 'sync'}
+            syncMessage={quickActionMessage?.kind === 'sync' ? quickActionMessage.text : undefined}
+            onConnect={() => void connectToDatabase()}
+            onSync={() => void syncLocalFiles()}
+          />
           <LinterAlertsCard results={lint.results} />
         </aside>
       </div>

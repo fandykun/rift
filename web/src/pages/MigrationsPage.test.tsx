@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchLint, fetchMigrations, fetchStatus } from '../lib/api'
@@ -74,6 +74,7 @@ describe('MigrationsPage', () => {
   })
 
   afterEach(() => {
+    cleanup()
     vi.clearAllMocks()
   })
 
@@ -104,5 +105,29 @@ describe('MigrationsPage', () => {
 
     expect(await screen.findByText('No migrations yet')).not.toBeNull()
     expect(screen.getByText('rift new add_users')).not.toBeNull()
+  })
+
+  it('checks database connectivity from the quick action button', async () => {
+    renderWithProviders()
+
+    await screen.findByText('create_accounts')
+    fireEvent.click(screen.getByRole('button', { name: /connect to db/i }))
+
+    await waitFor(() => expect(fetchStatus).toHaveBeenCalledTimes(2))
+    expect(await screen.findByText('Database connection OK · test')).not.toBeNull()
+  })
+
+  it('syncs local migration files by refetching dashboard data', async () => {
+    renderWithProviders()
+
+    await screen.findByText('create_accounts')
+    fireEvent.click(screen.getByRole('button', { name: /sync local files/i }))
+
+    await waitFor(() => {
+      expect(fetchStatus).toHaveBeenCalledTimes(2)
+      expect(fetchMigrations).toHaveBeenCalledTimes(2)
+      expect(fetchLint).toHaveBeenCalledTimes(2)
+    })
+    expect(await screen.findByText('Synced 2 migrations · 1 lint finding')).not.toBeNull()
   })
 })
