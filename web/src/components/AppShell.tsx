@@ -1,5 +1,8 @@
+import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
+import { fetchMigrations } from '../lib/api'
+import type { Migration } from '../lib/api'
 import { useAppStore } from '../stores/appStore'
 
 type NavItem = {
@@ -9,8 +12,8 @@ type NavItem = {
   isActive: (pathname: string) => boolean
 }
 
-function buildNavItems(pathname: string): NavItem[] {
-  const diffPath = /^\/migrations\/[^/]+\/diff$/.test(pathname) ? pathname : '/migrations'
+function buildNavItems(pathname: string, migrations: Migration[] = []): NavItem[] {
+  const diffPath = buildSchemaDiffPath(pathname, migrations)
   return [
     { to: '/', icon: 'dashboard', label: 'Dashboard', isActive: (path) => path === '/' },
     {
@@ -25,12 +28,36 @@ function buildNavItems(pathname: string): NavItem[] {
   ]
 }
 
+function buildSchemaDiffPath(pathname: string, migrations: Migration[]): string {
+  if (/^\/migrations\/[^/]+\/diff$/.test(pathname)) {
+    return pathname
+  }
+
+  const currentMigrationMatch = pathname.match(/^\/migrations\/([^/]+)$/)
+  if (currentMigrationMatch?.[1]) {
+    return `/migrations/${currentMigrationMatch[1]}/diff`
+  }
+
+  const preferredMigration = migrations.find((migration) => migration.status === 'pending') ?? migrations[0]
+  if (preferredMigration) {
+    return `/migrations/${preferredMigration.version}/diff`
+  }
+
+  return '/migrations'
+}
+
 export function AppShell() {
   const environmentName = useAppStore((state) => state.environmentName)
+  const token = useAppStore((state) => state.apiToken)
   const theme = useAppStore((state) => state.theme)
   const toggleTheme = useAppStore((state) => state.toggleTheme)
   const { pathname } = useLocation()
-  const navItems = buildNavItems(pathname)
+  const migrationsQuery = useQuery({
+    queryKey: ['migrations', token],
+    queryFn: () => fetchMigrations({ token }),
+    enabled: Boolean(token),
+  })
+  const navItems = buildNavItems(pathname, migrationsQuery.data ?? [])
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')

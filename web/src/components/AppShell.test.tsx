@@ -1,18 +1,33 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { fetchMigrations } from '../lib/api'
 import { useAppStore } from '../stores/appStore'
 import { AppShell } from './AppShell'
 
-function renderShell() {
+vi.mock('../lib/api', async () => {
+  const actual = await vi.importActual<typeof import('../lib/api')>('../lib/api')
+  return {
+    ...actual,
+    fetchMigrations: vi.fn(),
+  }
+})
+
+function renderShell(initialPath = '/migrations') {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
-    <MemoryRouter initialEntries={['/migrations']}>
-      <Routes>
-        <Route element={<AppShell />} path="/">
-          <Route element={<div>Dashboard content</div>} path="migrations" />
-        </Route>
-      </Routes>
-    </MemoryRouter>,
+    <QueryClientProvider client={client}>
+      <MemoryRouter initialEntries={[initialPath]}>
+        <Routes>
+          <Route element={<AppShell />} path="/">
+            <Route element={<div>Dashboard content</div>} path="migrations" />
+            <Route element={<div>Migration detail</div>} path="migrations/:version" />
+            <Route element={<div>Schema diff content</div>} path="migrations/:version/diff" />
+          </Route>
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
   )
 }
 
@@ -21,10 +36,28 @@ describe('AppShell', () => {
     localStorage.clear()
     document.documentElement.classList.remove('dark')
     useAppStore.setState({ apiToken: 'token', environmentName: 'development', sidebarOpen: false, theme: 'dark' })
+    vi.mocked(fetchMigrations).mockResolvedValue([
+      {
+        version: '20260623_090000',
+        filename: '20260623_090000_create_demo_customers.up.sql',
+        status: 'applied',
+        applied_by: 'demo',
+        has_lint: false,
+      },
+      {
+        version: '20260623_090500',
+        filename: '20260623_090500_create_demo_projects.up.sql',
+        status: 'pending',
+        applied_by: 'demo',
+        has_lint: false,
+      },
+    ])
   })
 
   afterEach(() => {
+    cleanup()
     document.documentElement.classList.remove('dark')
+    vi.clearAllMocks()
   })
 
   it('toggles the persisted color theme on the document root', () => {
@@ -40,5 +73,19 @@ describe('AppShell', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Switch to dark mode' }))
     expect(useAppStore.getState().theme).toBe('dark')
     expect(document.documentElement.classList.contains('dark')).toBe(true)
+  })
+
+  it('links the schema diff menu to a real migration diff route', async () => {
+    renderShell()
+
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: /schema diff/i }).getAttribute('href')).toBe('/migrations/20260623_090500/diff')
+    })
+  })
+
+  it('keeps the schema diff menu scoped to the current migration detail route', () => {
+    renderShell('/migrations/20260623_090000')
+
+    expect(screen.getByRole('link', { name: /schema diff/i }).getAttribute('href')).toBe('/migrations/20260623_090000/diff')
   })
 })
