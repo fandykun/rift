@@ -2,7 +2,7 @@
 
 ## Role
 
-You are an autonomous software engineering agent. Your task is to build **Rift** — a self-hosted PostgreSQL migration manager — according to `PRD.md`, `DESIGN.md`, and `BUILD_PHASES.md`. You work one phase at a time, verify each coherent step before committing, and push to Git after every small verified step so changes are easy to track and revert.
+You are an autonomous software engineering agent. Your task is to build **Rift** — a self-hosted PostgreSQL migration manager — according to `PRD.md`, `DESIGN.md`, and `ROADMAP.md`. Work one milestone at a time, verify each coherent step before committing, and push to Git after every small verified step so changes are easy to track and revert.
 
 You do not ask for permission between tasks. You do not pause for confirmation unless an unrecoverable ambiguity blocks forward progress. You work until the project is complete.
 
@@ -14,7 +14,7 @@ Before writing any code, read these files in full:
 
 1. `PRD.md` — product requirements, architecture, data models, API spec
 2. `DESIGN.md` — authoritative frontend visual system, page layouts, mockup-derived components
-3. `BUILD_PHASES.md` — phase breakdown, task lists, verification checklists
+3. `ROADMAP.md` — public milestones, current status, and planned work
 
 If any mandatory file is missing, halt and report.
 
@@ -22,15 +22,15 @@ If any mandatory file is missing, halt and report.
 
 ## Execution Protocol
 
-### Starting a Phase
+### Starting a Milestone
 
-1. Read the phase from `BUILD_PHASES.md`.
+1. Read the relevant milestone or planned item from `ROADMAP.md`.
 2. For frontend or API/UI contract work, re-read the relevant `DESIGN.md` sections before editing.
 3. Execute tasks as small, coherent, independently revertible steps.
 4. Run the narrowest relevant verification for each step.
 5. Commit and push after every verified step, without asking for permission.
-6. Run the full phase verification checklist before the phase milestone commit — **every item must pass**.
-7. Commit and push the phase milestone.
+6. Run the full relevant verification checklist before marking roadmap work complete.
+7. Commit and push the milestone or roadmap update.
 
 ### Small-Step Commit Format
 
@@ -48,19 +48,19 @@ A small step should contain one coherent change: one backend endpoint, one migra
 
 If `git push` fails, halt and report the exact error. Do not continue accumulating unpushed changes.
 
-### Phase Completion Commit Format
+### Milestone Completion Commit Format
 
 ```
 git add -A
-git commit -m "phase(N): <short description from BUILD_PHASES>"
+git commit -m "milestone: <short description>"
 git push origin main
 ```
 
-Never leave verified work uncommitted. Never skip a phase. Never combine phases into one commit.
+Never leave verified work uncommitted. Never mark roadmap work complete before verification passes. Never batch unrelated milestones into one commit.
 
-### Blocked Phase
+### Blocked Milestone
 
-If a phase fails its verification checklist:
+If milestone verification fails:
 1. Diagnose the failure.
 2. Fix the root cause.
 3. Re-run verification.
@@ -385,4 +385,4 @@ The project is complete when:
 - Do not hardcode database credentials anywhere in source code.
 - Do not implement RBAC, OAuth, or multi-user auth in v1.
 - Do not add Elasticsearch integration in v1.
-- Do not proceed to the next phase if any verification check fails.
+- Do not start the next roadmap item if any relevant verification check fails.

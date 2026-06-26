@@ -259,7 +259,7 @@ docker/               Dockerfile for single-binary runtime
 
 ## Status
 
-Rift is currently implemented through Phase 10 of `BUILD_PHASES.md`:
+Rift has a working MVP for self-hosted PostgreSQL migration management:
 
 - CLI migration workflow
 - API server
@@ -271,9 +271,9 @@ Rift is currently implemented through Phase 10 of `BUILD_PHASES.md`:
 - single binary embed
 - Docker Compose deployment
 - React/Go tests
-- README quickstart
-- CLI progress/version polish
-- UI empty states and theme toggle
+- deployment readiness checks
+
+See [`ROADMAP.md`](ROADMAP.md) for completed milestones and planned work.
 
 ## Contributing
 
@@ -281,4 +281,4 @@ Rift is currently implemented through Phase 10 of `BUILD_PHASES.md`:
 2. Keep changes small and independently revertible.
 3. Run `go test ./...`, `cd web && npm run test`, and `cd web && npm run build` before submitting.
 4. Include screenshots for dashboard-facing UI changes.
-5. Document migration behavior changes in this README and `BUILD_PHASES.md` when relevant.
+5. Document migration behavior changes in this README and `ROADMAP.md` when relevant.
