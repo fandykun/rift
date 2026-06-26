@@ -15,6 +15,7 @@ internal/embed/ui/*
 .env.*
 !.env.example
 rift.yaml
+vps-migrations/
 
 # Local agent/session state
 .hermes/
