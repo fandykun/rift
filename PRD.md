@@ -45,7 +45,7 @@ Existing tools (Flyway, Liquibase, golang-migrate) solve the core sequencing pro
 - Advisory lock usage to prevent concurrent migration runs
 - Built-in linter flagging dangerous DDL patterns with safer alternatives
 - Single binary deployment with embedded React UI (`go:embed`)
-- Docker support for self-hosted server mode
+- Docker support for self-hosted server mode, including a writable host-mounted migrations directory for deployments that allow web-created migrations
 - Deployment readiness checks with `rift config doctor` for public/demo environments
 - SQLite for local config/state when running in CLI-only mode
 
@@ -60,7 +60,9 @@ Existing tools (Flyway, Liquibase, golang-migrate) solve the core sequencing pro
 
 ## Core Features
 
-### 1. Migration Authoring CLI
+### 1. Migration Authoring
+
+Rift supports migration authoring from both the CLI and the web dashboard.
 
 ```
 rift new add_users_table
@@ -77,6 +79,8 @@ rift config doctor      # check deployment readiness without printing secrets
 ```
 
 Each migration file pair (`up.sql` / `down.sql`) uses a timestamp prefix for strict ordering. The CLI reads config from `rift.yaml` or environment variables.
+
+The web dashboard provides a **New Migration** action in the app shell. It opens a modal, accepts a human-readable migration name, previews the normalized timestamped filename, creates the `.up.sql`/`.down.sql` pair through the authenticated API, refreshes migration-related queries, and navigates to the new migration detail page for editing.
 
 ### 2. Schema Diff Viewer
 
@@ -276,6 +280,7 @@ linter:
 ```
 GET    /api/v1/status                    → environment name, counts (applied/pending/rolledback), last deployed
 GET    /api/v1/migrations                → full list with status, author, timing, linter flag
+POST   /api/v1/migrations                → create timestamped .up.sql/.down.sql file pair (body: {"name":"add users"})
 GET    /api/v1/migrations/:version       → single migration detail + up.sql + down.sql content
 GET    /api/v1/migrations/:version/diff  → structured schema diff JSON for that migration
 POST   /api/v1/migrate/up               → apply all pending (SSE stream, one event per migration)

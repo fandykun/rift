@@ -227,6 +227,7 @@ No phase is skipped. No phase is merged unless its verification checklist passes
 2. Implement all API handlers in `internal/api/handlers/`:
    - `GET /api/v1/status` → env name, counts (applied/pending/rolled-back), last deployed
    - `GET /api/v1/migrations` → full list with status
+   - `POST /api/v1/migrations` → create a timestamped `.up.sql`/`.down.sql` file pair from a normalized name and return it as pending
    - `GET /api/v1/migrations/:version` → single migration + SQL content
    - `GET /api/v1/migrations/:version/diff` → schema diff JSON for that migration
    - `POST /api/v1/migrate/up` → trigger `RunUp`; stream output via SSE (`text/event-stream`)
@@ -246,6 +247,7 @@ No phase is skipped. No phase is merged unless its verification checklist passes
 **Verification:**
 - [x] `GET /api/v1/status` returns correct JSON with valid counts
 - [x] `GET /api/v1/migrations` returns correct applied/pending split
+- [x] `POST /api/v1/migrations` creates both migration files and returns the new pending migration
 - [x] Bearer token middleware returns 401 for missing/wrong token
 - [x] `POST /api/v1/migrate/up` SSE stream sends one event per migration applied
 - [x] `GET /api/v1/team` and `GET /api/v1/conflicts` return JSON consumed by the Team page
@@ -270,7 +272,7 @@ No phase is skipped. No phase is merged unless its verification checklist passes
    - [x] `StatCard`, `DataTable`, `QuickActionsCard`, `LinterAlertsCard`, `LoadingSkeleton`
    - [x] `ErrorBoundary`
 5. [x] Build API client layer (`src/lib/api.ts`):
-   - [x] `fetchMigrations()`, `fetchMigration(version)`, `fetchDiff(version)`, `fetchStatus()`, `fetchHistory()`, `fetchLint()`, `fetchTeam()`, `fetchConflicts()`
+   - [x] `fetchMigrations()`, `createMigration(request)`, `fetchMigration(version)`, `fetchDiff(version)`, `fetchStatus()`, `fetchHistory()`, `fetchLint()`, `fetchTeam()`, `fetchConflicts()`
    - [x] `triggerUp()` (returns EventSource), `triggerDown(steps)`
    - [x] All requests attach the configured Bearer token from Zustand store
 6. [x] Build `/` as a redirect to `/migrations` or render the same Migration Dashboard.
@@ -284,12 +286,17 @@ No phase is skipped. No phase is merged unless its verification checklist passes
    - [x] Left schema/table browser, center editable CodeMirror SQL editor, right Zero-Downtime Linter panel
    - [x] Metadata strip: filename input, category dropdown, author badge
    - [x] Table browser insertion action inserts a table name at the active editor cursor
+9. [x] Wire the app-shell **New Migration** action:
+   - [x] Opens a modal with migration-name input and normalized filename preview
+   - [x] Calls `POST /api/v1/migrations` with the configured bearer token
+   - [x] Invalidates migration/status/lint queries and navigates to `/migrations/:version` after creation
 
 **Verification:**
 - [x] App loads on `http://localhost:5173` with correct token prompt if not set
 - [x] `/migrations` renders the mockup-aligned dashboard layout, stat cards, table, Quick Actions, and Linter Alerts
 - [x] Click a migration → SQL Authoring Interface opens with CodeMirror syntax highlighting and linter panel
 - [x] Sidebar links navigate correctly and use the `DESIGN.md` active border treatment
+- [x] New Migration button creates a migration through the API and routes to its detail page
 
 **Commit:** `phase(7): React app shell, routing, API client, dashboard, migrations list`
 
@@ -430,6 +437,7 @@ No phase is skipped. No phase is merged unless its verification checklist passes
 2. Update public deployment docs to recommend `./rift config doctor` before exposing a URL.
 3. Update PRD and README CLI references so deployment readiness is tracked as a product feature.
 4. Keep demo deployment compatibility with `/app/demo-migrations` and the existing Compose overlay.
+5. For VPS/self-hosted demo deployments that support web-created migrations, mount a writable host directory (`./vps-migrations`) at `/app/migrations` so files created by `POST /api/v1/migrations` survive container recreation.
 
 **Verification:**
 - [x] `go test ./cmd/rift` covers doctor pass/fail cases and secret redaction
@@ -439,5 +447,6 @@ No phase is skipped. No phase is merged unless its verification checklist passes
 - [x] `cd web && npm run lint` passes with 0 failures
 - [x] `cd web && npm run build` succeeds
 - [x] `make build && ./rift --version` produces a single binary
+- [x] VPS deployment mounts `./vps-migrations` to `/app/migrations` and a deployed `POST /api/v1/migrations` smoke test creates host-visible files
 
 **Commit:** `phase(11): public deployment readiness doctor`
