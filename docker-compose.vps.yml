@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    env_file:
+      - .env.vps
+    volumes:
+      - rift-vps-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  rift:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
+    env_file:
+      - .env.vps
+    ports:
+      - "0.0.0.0:${RIFT_PUBLIC_PORT:-7878}:7878"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  demo-seed:
+    profiles: ["seed"]
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
+    command: ["up"]
+    env_file:
+      - .env.vps
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+volumes:
+  rift-vps-postgres-data:
