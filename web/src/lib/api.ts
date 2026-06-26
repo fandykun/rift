@@ -25,6 +25,12 @@ export type Migration = {
   down_sql?: string
 }
 
+export type CreateMigrationRequest = {
+  name: string
+  up_sql?: string
+  down_sql?: string
+}
+
 export type MigrationRecord = {
   ID: number
   Version: string
@@ -179,6 +185,25 @@ async function requestJSON<T>(path: string, options: RequestOptions = {}): Promi
   return (await response.json()) as T
 }
 
+async function postJSON<T>(path: string, body: unknown, options: RequestOptions = {}): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...buildHeaders(options.token),
+    },
+    signal: options.signal,
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    const message = await readErrorMessage(response)
+    throw new Error(message)
+  }
+
+  return (await response.json()) as T
+}
+
 function buildHeaders(token?: string): HeadersInit {
   if (!token) {
     return {}
@@ -201,6 +226,10 @@ export function fetchStatus(options?: RequestOptions): Promise<StatusResponse> {
 
 export function fetchMigrations(options?: RequestOptions): Promise<Migration[]> {
   return requestJSON<Migration[]>('/api/v1/migrations', options)
+}
+
+export function createMigration(request: CreateMigrationRequest, options?: RequestOptions): Promise<Migration> {
+  return postJSON<Migration>('/api/v1/migrations', request, options)
 }
 
 export function fetchMigration(version: string, options?: RequestOptions): Promise<Migration> {

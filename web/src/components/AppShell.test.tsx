@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fetchMigrations } from '../lib/api'
+import { createMigration, fetchMigrations } from '../lib/api'
 import { useAppStore } from '../stores/appStore'
 import { AppShell } from './AppShell'
 
@@ -10,6 +10,7 @@ vi.mock('../lib/api', async () => {
   const actual = await vi.importActual<typeof import('../lib/api')>('../lib/api')
   return {
     ...actual,
+    createMigration: vi.fn(),
     fetchMigrations: vi.fn(),
   }
 })
@@ -52,6 +53,12 @@ describe('AppShell', () => {
         has_lint: false,
       },
     ])
+    vi.mocked(createMigration).mockResolvedValue({
+      version: '20260626_221500',
+      filename: '20260626_221500_add_billing_events',
+      status: 'pending',
+      has_lint: false,
+    })
   })
 
   afterEach(() => {
@@ -87,5 +94,19 @@ describe('AppShell', () => {
     renderShell('/migrations/20260623_090000')
 
     expect(screen.getByRole('link', { name: /schema diff/i }).getAttribute('href')).toBe('/migrations/20260623_090000/diff')
+  })
+
+  it('creates a migration from the sidebar button and navigates to the detail page', async () => {
+    renderShell()
+
+    fireEvent.click(screen.getByRole('button', { name: /new migration/i }))
+    fireEvent.change(screen.getByRole('textbox', { name: /migration name/i }), { target: { value: 'Add Billing Events' } })
+    expect(screen.getByText('YYYYMMDD_HHMMSS_add_billing_events.up.sql')).not.toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+
+    await waitFor(() => {
+      expect(createMigration).toHaveBeenCalledWith({ name: 'Add Billing Events' }, { token: 'token' })
+    })
+    expect(await screen.findByText('Migration detail')).not.toBeNull()
   })
 })

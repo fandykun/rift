@@ -61,6 +61,37 @@ func TestTeamEndpoint(t *testing.T) {
 	}
 }
 
+func TestCreateMigrationEndpointWritesPendingFilePair(t *testing.T) {
+	migrationsDir := t.TempDir()
+	router := NewServer(&config.Config{MigrationsDir: migrationsDir, Server: config.ServerConfig{Token: "secret"}}, nil)
+	body := strings.NewReader(`{"name":"Add Billing Events","up_sql":"CREATE TABLE billing_events (id BIGSERIAL PRIMARY KEY);","down_sql":"DROP TABLE billing_events;"}`)
+	response := performAPIRequest(t, router, http.MethodPost, "/api/v1/migrations", "secret", body)
+
+	if response.Code != http.StatusCreated {
+		t.Fatalf("status = %d, body = %s", response.Code, response.Body.String())
+	}
+	var created migrationResponse
+	if err := json.Unmarshal(response.Body.Bytes(), &created); err != nil {
+		t.Fatalf("decoding create response: %v", err)
+	}
+	if created.Status != "pending" || !strings.HasSuffix(created.Filename, "_add_billing_events") || created.Version == "" {
+		t.Fatalf("unexpected create response: %+v", created)
+	}
+	upPath := filepath.Join(migrationsDir, created.Filename+".up.sql")
+	downPath := filepath.Join(migrationsDir, created.Filename+".down.sql")
+	upContent, err := os.ReadFile(upPath)
+	if err != nil {
+		t.Fatalf("reading created up migration: %v", err)
+	}
+	downContent, err := os.ReadFile(downPath)
+	if err != nil {
+		t.Fatalf("reading created down migration: %v", err)
+	}
+	if !strings.Contains(string(upContent), "CREATE TABLE billing_events") || !strings.Contains(string(downContent), "DROP TABLE billing_events") {
+		t.Fatalf("unexpected migration contents: up=%q down=%q", upContent, downContent)
+	}
+}
+
 func TestSPAFallbackServesIndex(t *testing.T) {
 	router := NewServer(&config.Config{Server: config.ServerConfig{Token: "secret"}}, nil)
 	request := httptest.NewRequest(http.MethodGet, "/migrations/20260620_180000/diff", nil)

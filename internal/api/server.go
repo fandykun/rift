@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"os"
+	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -34,6 +37,7 @@ func NewServer(cfg *config.Config, pool *pgxpool.Pool) *chi.Mux {
 		r.Use(server.authMiddleware)
 		r.Get("/status", server.handleStatus)
 		r.Get("/migrations", server.handleMigrations)
+		r.Post("/migrations", server.handleCreateMigration)
 		r.Get("/migrations/{version}", server.handleMigrationDetail)
 		r.Get("/migrations/{version}/diff", server.handleMigrationDiff)
 		r.Post("/migrate/up", server.handleMigrateUp)
@@ -51,6 +55,8 @@ type server struct {
 	cfg  *config.Config
 	pool *pgxpool.Pool
 }
+
+var apiMigrationNamePattern = regexp.MustCompile(`[^a-z0-9]+`)
 
 type statusResponse struct {
 	Environment string     `json:"environment"`
@@ -80,6 +86,12 @@ type migrationResponse struct {
 	HasLint     bool       `json:"has_lint"`
 	UpSQL       string     `json:"up_sql,omitempty"`
 	DownSQL     string     `json:"down_sql,omitempty"`
+}
+
+type createMigrationRequest struct {
+	Name    string `json:"name"`
+	UpSQL   string `json:"up_sql"`
+	DownSQL string `json:"down_sql"`
 }
 
 type lintResponse struct {
@@ -135,6 +147,35 @@ func (s *server) handleMigrations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, migrationRows(files, applied, false))
+}
+
+func (s *server) handleCreateMigration(w http.ResponseWriter, r *http.Request) {
+	if s.cfg == nil {
+		writeError(w, http.StatusInternalServerError, "server config is not initialized")
+		return
+	}
+
+	var request createMigrationRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeError(w, http.StatusBadRequest, fmt.Sprintf("decoding migration request: %v", err))
+		return
+	}
+
+	file, err := createMigrationFiles(s.cfg.MigrationsDir, request, time.Now().UTC())
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	warnings := linter.LintSQL(file.UpSQL)
+	writeJSON(w, http.StatusCreated, migrationResponse{
+		Version:  file.Version,
+		Filename: file.Filename,
+		Status:   "pending",
+		HasLint:  len(warnings) > 0,
+		UpSQL:    file.UpSQL,
+		DownSQL:  file.DownSQL,
+	})
 }
 
 func (s *server) handleMigrationDetail(w http.ResponseWriter, r *http.Request) {
@@ -393,6 +434,75 @@ func lintFiles(files []migration.MigrationFile) ([]lintAPIResult, int, int) {
 		results = append(results, lintAPIResult{Filename: file.Filename, Warnings: warnings})
 	}
 	return results, errorCount, warningCount
+}
+
+func createMigrationFiles(migrationsDir string, request createMigrationRequest, createdAt time.Time) (migration.MigrationFile, error) {
+	name := normalizeAPIMigrationName(request.Name)
+	if name == "" {
+		return migration.MigrationFile{}, fmt.Errorf("migration name must contain at least one letter or number")
+	}
+	if strings.TrimSpace(migrationsDir) == "" {
+		return migration.MigrationFile{}, fmt.Errorf("migrations directory is not configured")
+	}
+	if err := os.MkdirAll(migrationsDir, 0o755); err != nil {
+		return migration.MigrationFile{}, fmt.Errorf("creating migrations directory %q: %w", migrationsDir, err)
+	}
+
+	version := createdAt.Format("20060102_150405")
+	base := version + "_" + name
+	upSQL := strings.TrimRight(request.UpSQL, "\n")
+	if strings.TrimSpace(upSQL) == "" {
+		upSQL = "-- Write your forward migration SQL here."
+	}
+	downSQL := strings.TrimRight(request.DownSQL, "\n")
+	if strings.TrimSpace(downSQL) == "" {
+		downSQL = "-- Write your rollback migration SQL here."
+	}
+	upSQL = migrationHeader(name, createdAt) + "\n" + upSQL + "\n"
+	downSQL = migrationHeader(name, createdAt) + "\n" + downSQL + "\n"
+
+	upFilename := base + ".up.sql"
+	downFilename := base + ".down.sql"
+	if err := writeNewMigrationFile(filepath.Join(migrationsDir, upFilename), upSQL); err != nil {
+		return migration.MigrationFile{}, err
+	}
+	if err := writeNewMigrationFile(filepath.Join(migrationsDir, downFilename), downSQL); err != nil {
+		_ = os.Remove(filepath.Join(migrationsDir, upFilename))
+		return migration.MigrationFile{}, err
+	}
+
+	return migration.MigrationFile{
+		Version:  version,
+		Filename: base,
+		UpSQL:    upSQL,
+		DownSQL:  downSQL,
+		Checksum: migration.Checksum([]byte(upSQL)),
+	}, nil
+}
+
+func normalizeAPIMigrationName(rawName string) string {
+	name := strings.ToLower(strings.TrimSpace(rawName))
+	name = apiMigrationNamePattern.ReplaceAllString(name, "_")
+	return strings.Trim(name, "_")
+}
+
+func migrationHeader(name string, createdAt time.Time) string {
+	return fmt.Sprintf("-- Migration: %s | Created: %s", name, createdAt.Format(time.RFC3339))
+}
+
+func writeNewMigrationFile(path string, content string) error {
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
+	if err != nil {
+		if os.IsExist(err) {
+			return fmt.Errorf("migration file already exists: %s", path)
+		}
+		return fmt.Errorf("creating migration file %q: %w", path, err)
+	}
+	defer file.Close()
+	if _, err := file.WriteString(content); err != nil {
+		return fmt.Errorf("writing migration file %q: %w", path, err)
+	}
+	return nil
 }
 
 func (s *server) authMiddleware(next http.Handler) http.Handler {

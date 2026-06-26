@@ -1,7 +1,7 @@
-import { useQuery } from '@tanstack/react-query'
-import { useEffect } from 'react'
-import { Link, Outlet, useLocation } from 'react-router-dom'
-import { fetchMigrations } from '../lib/api'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { createMigration, fetchMigrations } from '../lib/api'
 import type { Migration } from '../lib/api'
 import { useAppStore } from '../stores/appStore'
 
@@ -52,10 +52,25 @@ export function AppShell() {
   const theme = useAppStore((state) => state.theme)
   const toggleTheme = useAppStore((state) => state.toggleTheme)
   const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const [createModalOpen, setCreateModalOpen] = useState(false)
   const migrationsQuery = useQuery({
     queryKey: ['migrations', token],
     queryFn: () => fetchMigrations({ token }),
     enabled: Boolean(token),
+  })
+  const createMigrationMutation = useMutation({
+    mutationFn: (name: string) => createMigration({ name }, { token }),
+    onSuccess: async (migration) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['migrations'] }),
+        queryClient.invalidateQueries({ queryKey: ['status'] }),
+        queryClient.invalidateQueries({ queryKey: ['lint'] }),
+      ])
+      setCreateModalOpen(false)
+      void navigate(`/migrations/${migration.version}`)
+    },
   })
   const navItems = buildNavItems(pathname, migrationsQuery.data ?? [])
 
@@ -101,7 +116,12 @@ export function AppShell() {
           })}
         </nav>
 
-        <button className="mb-unit-4 flex w-full items-center justify-center gap-unit-2 rounded bg-primary py-2 font-body-md text-body-md font-medium text-on-primary transition-colors hover:bg-primary/90 active:scale-95">
+        <button
+          className="mb-unit-4 flex w-full items-center justify-center gap-unit-2 rounded bg-primary py-2 font-body-md text-body-md font-medium text-on-primary transition-colors hover:bg-primary/90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={!token}
+          type="button"
+          onClick={() => setCreateModalOpen(true)}
+        >
           <span className="material-symbols-outlined text-[18px]">add</span>
           New Migration
         </button>
@@ -141,6 +161,97 @@ export function AppShell() {
           <Outlet />
         </div>
       </section>
+
+      {createModalOpen ? (
+        <CreateMigrationModal
+          error={createMigrationMutation.error instanceof Error ? createMigrationMutation.error.message : undefined}
+          isCreating={createMigrationMutation.isPending}
+          onClose={() => setCreateModalOpen(false)}
+          onCreate={(name) => createMigrationMutation.mutate(name)}
+        />
+      ) : null}
     </main>
   )
+}
+
+
+type CreateMigrationModalProps = {
+  error?: string
+  isCreating: boolean
+  onClose: () => void
+  onCreate: (name: string) => void
+}
+
+function CreateMigrationModal({ error, isCreating, onClose, onCreate }: CreateMigrationModalProps) {
+  const [name, setName] = useState('')
+  const normalizedName = normalizeMigrationName(name)
+  const canCreate = normalizedName.length > 0 && !isCreating
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 p-unit-8 backdrop-blur-sm">
+      <section className="w-full max-w-lg rounded-xl border border-outline-variant bg-surface-container-highest p-unit-6 shadow-2xl">
+        <div className="flex items-start justify-between gap-unit-4">
+          <div>
+            <h2 className="font-headline-md text-headline-md text-on-surface">New migration</h2>
+            <p className="mt-unit-1 font-body-md text-body-md text-on-surface-variant">
+              Create a timestamped up/down SQL pair in the configured migrations directory.
+            </p>
+          </div>
+          <button aria-label="Close new migration dialog" className="text-on-surface-variant hover:text-on-surface" type="button" onClick={onClose}>
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <form
+          className="mt-unit-5 space-y-unit-4"
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (canCreate) {
+              onCreate(name)
+            }
+          }}
+        >
+          <label className="block font-body-md text-body-md text-on-surface">
+            Migration name
+            <input
+              autoFocus
+              className="mt-unit-2 w-full rounded border border-outline-variant bg-surface-container-lowest px-unit-3 py-2 font-body-md text-body-md text-on-surface outline-none transition-colors placeholder:text-on-surface-variant focus:border-primary"
+              placeholder="add billing events"
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
+          </label>
+
+          <div className="rounded border border-outline-variant bg-surface-container p-unit-3 font-code-sm text-code-sm text-on-surface-variant">
+            <span className="text-on-surface">File preview:</span>{' '}
+            {normalizedName ? `YYYYMMDD_HHMMSS_${normalizedName}.up.sql` : 'Enter a name to preview the filename'}
+          </div>
+
+          {error ? <p className="rounded border border-error/40 bg-error-container/10 p-unit-3 font-body-md text-body-md text-error">{error}</p> : null}
+
+          <div className="flex justify-end gap-unit-2">
+            <button className="rounded border border-outline-variant px-4 py-2 font-label-caps text-label-caps uppercase text-on-surface hover:bg-surface-variant" type="button" onClick={onClose}>
+              Cancel
+            </button>
+            <button
+              className="rounded bg-primary px-4 py-2 font-label-caps text-label-caps font-bold uppercase text-on-primary disabled:cursor-not-allowed disabled:opacity-40"
+              disabled={!canCreate}
+              type="submit"
+            >
+              {isCreating ? 'Creating…' : 'Create'}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  )
+}
+
+function normalizeMigrationName(rawName: string): string {
+  return rawName
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
 }
