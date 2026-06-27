@@ -31,6 +31,11 @@ export type CreateMigrationRequest = {
   down_sql?: string
 }
 
+export type UpdateMigrationRequest = {
+  up_sql: string
+  down_sql: string
+}
+
 export type MigrationRecord = {
   ID: number
   Version: string
@@ -204,6 +209,25 @@ async function postJSON<T>(path: string, body: unknown, options: RequestOptions 
   return (await response.json()) as T
 }
 
+async function putJSON<T>(path: string, body: unknown, options: RequestOptions = {}): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...buildHeaders(options.token),
+    },
+    signal: options.signal,
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    const message = await readErrorMessage(response)
+    throw new Error(message)
+  }
+
+  return (await response.json()) as T
+}
+
 function buildHeaders(token?: string): HeadersInit {
   if (!token) {
     return {}
@@ -234,6 +258,10 @@ export function createMigration(request: CreateMigrationRequest, options?: Reque
 
 export function fetchMigration(version: string, options?: RequestOptions): Promise<Migration> {
   return requestJSON<Migration>(`/api/v1/migrations/${encodeURIComponent(version)}`, options)
+}
+
+export function updateMigration(version: string, request: UpdateMigrationRequest, options?: RequestOptions): Promise<Migration> {
+  return putJSON<Migration>(`/api/v1/migrations/${encodeURIComponent(version)}`, request, options)
 }
 
 export async function fetchDiff(version: string, options?: RequestOptions): Promise<SchemaDiff> {

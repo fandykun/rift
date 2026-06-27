@@ -92,6 +92,37 @@ func TestCreateMigrationEndpointWritesPendingFilePair(t *testing.T) {
 	}
 }
 
+func TestUpdateMigrationEndpointWritesPendingFilePair(t *testing.T) {
+	migrationsDir := t.TempDir()
+	writeFile(t, migrationsDir, "20260626_120000_add_billing_events.up.sql", "-- old up\n")
+	writeFile(t, migrationsDir, "20260626_120000_add_billing_events.down.sql", "-- old down\n")
+	router := NewServer(&config.Config{MigrationsDir: migrationsDir, Server: config.ServerConfig{Token: "secret"}}, nil)
+	body := strings.NewReader(`{"up_sql":"CREATE TABLE billing_events (id BIGSERIAL PRIMARY KEY);","down_sql":"DROP TABLE billing_events;"}`)
+	response := performAPIRequest(t, router, http.MethodPut, "/api/v1/migrations/20260626_120000", "secret", body)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", response.Code, response.Body.String())
+	}
+	var updated migrationResponse
+	if err := json.Unmarshal(response.Body.Bytes(), &updated); err != nil {
+		t.Fatalf("decoding update response: %v", err)
+	}
+	if updated.Version != "20260626_120000" || updated.Status != "pending" {
+		t.Fatalf("unexpected update response: %+v", updated)
+	}
+	upContent, err := os.ReadFile(filepath.Join(migrationsDir, updated.Filename+".up.sql"))
+	if err != nil {
+		t.Fatalf("reading updated up migration: %v", err)
+	}
+	downContent, err := os.ReadFile(filepath.Join(migrationsDir, updated.Filename+".down.sql"))
+	if err != nil {
+		t.Fatalf("reading updated down migration: %v", err)
+	}
+	if string(upContent) != "CREATE TABLE billing_events (id BIGSERIAL PRIMARY KEY);\n" || string(downContent) != "DROP TABLE billing_events;\n" {
+		t.Fatalf("unexpected updated contents: up=%q down=%q", upContent, downContent)
+	}
+}
+
 func TestSPAFallbackServesIndex(t *testing.T) {
 	router := NewServer(&config.Config{Server: config.ServerConfig{Token: "secret"}}, nil)
 	request := httptest.NewRequest(http.MethodGet, "/migrations/20260620_180000/diff", nil)

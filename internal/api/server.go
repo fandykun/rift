@@ -39,6 +39,7 @@ func NewServer(cfg *config.Config, pool *pgxpool.Pool) *chi.Mux {
 		r.Get("/migrations", server.handleMigrations)
 		r.Post("/migrations", server.handleCreateMigration)
 		r.Get("/migrations/{version}", server.handleMigrationDetail)
+		r.Put("/migrations/{version}", server.handleUpdateMigration)
 		r.Get("/migrations/{version}/diff", server.handleMigrationDiff)
 		r.Post("/migrate/up", server.handleMigrateUp)
 		r.Post("/migrate/down", server.handleMigrateDown)
@@ -90,6 +91,11 @@ type migrationResponse struct {
 
 type createMigrationRequest struct {
 	Name    string `json:"name"`
+	UpSQL   string `json:"up_sql"`
+	DownSQL string `json:"down_sql"`
+}
+
+type updateMigrationRequest struct {
 	UpSQL   string `json:"up_sql"`
 	DownSQL string `json:"down_sql"`
 }
@@ -191,6 +197,68 @@ func (s *server) handleMigrationDetail(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	writeError(w, http.StatusNotFound, fmt.Sprintf("migration %q not found", version))
+}
+
+func (s *server) handleUpdateMigration(w http.ResponseWriter, r *http.Request) {
+	version := chi.URLParam(r, "version")
+	if s.cfg == nil {
+		writeError(w, http.StatusInternalServerError, "server config is not initialized")
+		return
+	}
+
+	var request updateMigrationRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeError(w, http.StatusBadRequest, fmt.Sprintf("decoding migration update request: %v", err))
+		return
+	}
+
+	files, err := migration.LoadFiles(s.cfg.MigrationsDir)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	var target *migration.MigrationFile
+	for i := range files {
+		if files[i].Version == version {
+			target = &files[i]
+			break
+		}
+	}
+	if target == nil {
+		writeError(w, http.StatusNotFound, fmt.Sprintf("migration %q not found", version))
+		return
+	}
+
+	if s.pool != nil {
+		if err := migration.EnsureStateTable(r.Context(), s.pool); err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		applied, err := migration.GetApplied(r.Context(), s.pool)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		if migrationIsActivelyApplied(version, applied) {
+			writeError(w, http.StatusConflict, fmt.Sprintf("migration %q has already been applied; create a new migration instead of editing applied SQL", version))
+			return
+		}
+	}
+
+	updated, err := updateMigrationFiles(s.cfg.MigrationsDir, *target, request)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	warnings := linter.LintSQL(updated.UpSQL)
+	writeJSON(w, http.StatusOK, migrationResponse{
+		Version:  updated.Version,
+		Filename: updated.Filename,
+		Status:   "pending",
+		HasLint:  len(warnings) > 0,
+		UpSQL:    updated.UpSQL,
+		DownSQL:  updated.DownSQL,
+	})
 }
 
 func (s *server) handleMigrationDiff(w http.ResponseWriter, r *http.Request) {
@@ -480,6 +548,37 @@ func createMigrationFiles(migrationsDir string, request createMigrationRequest, 
 	}, nil
 }
 
+func updateMigrationFiles(migrationsDir string, file migration.MigrationFile, request updateMigrationRequest) (migration.MigrationFile, error) {
+	upSQL := strings.TrimRight(request.UpSQL, "\n") + "\n"
+	downSQL := strings.TrimRight(request.DownSQL, "\n") + "\n"
+	if strings.TrimSpace(upSQL) == "" || strings.TrimSpace(downSQL) == "" {
+		return migration.MigrationFile{}, fmt.Errorf("up_sql and down_sql are required")
+	}
+
+	upPath := filepath.Join(migrationsDir, file.Filename+".up.sql")
+	downPath := filepath.Join(migrationsDir, file.Filename+".down.sql")
+	if err := os.WriteFile(upPath, []byte(upSQL), 0o644); err != nil {
+		return migration.MigrationFile{}, fmt.Errorf("writing up migration %q: %w", upPath, err)
+	}
+	if err := os.WriteFile(downPath, []byte(downSQL), 0o644); err != nil {
+		return migration.MigrationFile{}, fmt.Errorf("writing down migration %q: %w", downPath, err)
+	}
+
+	file.UpSQL = upSQL
+	file.DownSQL = downSQL
+	file.Checksum = migration.Checksum([]byte(upSQL))
+	return file, nil
+}
+
+func migrationIsActivelyApplied(version string, applied []migration.MigrationRecord) bool {
+	for _, record := range applied {
+		if record.Version == version && !record.RolledBack {
+			return true
+		}
+	}
+	return false
+}
+
 func normalizeAPIMigrationName(rawName string) string {
 	name := strings.ToLower(strings.TrimSpace(rawName))
 	name = apiMigrationNamePattern.ReplaceAllString(name, "_")
@@ -527,7 +626,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Vary", "Origin")
 			w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
 		}
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)

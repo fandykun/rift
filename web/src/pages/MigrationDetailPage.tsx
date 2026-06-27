@@ -2,10 +2,10 @@ import CodeMirror from '@uiw/react-codemirror'
 import { sql } from '@codemirror/lang-sql'
 import { useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ErrorState } from '../components/ErrorState'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
-import { fetchLint, fetchMigration } from '../lib/api'
+import { fetchLint, fetchMigration, updateMigration } from '../lib/api'
 import type { LintWarning } from '../lib/api'
 import { useAppStore } from '../stores/appStore'
 
@@ -14,7 +14,12 @@ const schemaTables = ['users', 'accounts', 'sessions', 'orders', 'audit_log']
 export function MigrationDetailPage() {
   const { version } = useParams<{ version: string }>()
   const token = useAppStore((state) => state.apiToken)
+  const queryClient = useQueryClient()
   const [filter, setFilter] = useState('')
+  const [activeFile, setActiveFile] = useState<'up' | 'down'>('up')
+  const [upDraft, setUpDraft] = useState<string>()
+  const [downDraft, setDownDraft] = useState<string>()
+  const [saveMessage, setSaveMessage] = useState<string>()
 
   const migrationQuery = useQuery({
     queryKey: ['migration', version, token],
@@ -29,8 +34,24 @@ export function MigrationDetailPage() {
   })
 
   const migration = migrationQuery.data
-  const [sqlText, setSQLText] = useState('')
-  const editorValue = sqlText || migration?.up_sql || ''
+  const effectiveUpSQL = upDraft ?? migration?.up_sql ?? ''
+  const effectiveDownSQL = downDraft ?? migration?.down_sql ?? ''
+  const saveMutation = useMutation({
+    mutationFn: () => updateMigration(version ?? '', { up_sql: effectiveUpSQL, down_sql: effectiveDownSQL }, { token }),
+    onSuccess: async (updated) => {
+      queryClient.setQueryData(['migration', version, token], updated)
+      setUpDraft(undefined)
+      setDownDraft(undefined)
+      setSaveMessage('Migration files saved')
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['migration', version, token] }),
+        queryClient.invalidateQueries({ queryKey: ['migrations'] }),
+        queryClient.invalidateQueries({ queryKey: ['lint'] }),
+      ])
+    },
+  })
+  const activeSQL = activeFile === 'up' ? effectiveUpSQL : effectiveDownSQL
+  const isDirty = Boolean(migration) && (effectiveUpSQL !== (migration?.up_sql ?? '') || effectiveDownSQL !== (migration?.down_sql ?? ''))
   const matchingLint = useMemo(() => {
     if (!migration || !lintQuery.data) {
       return []
@@ -39,6 +60,19 @@ export function MigrationDetailPage() {
   }, [lintQuery.data, migration])
 
   const filteredTables = schemaTables.filter((table) => table.includes(filter.toLowerCase()))
+
+  function setActiveSQL(value: string) {
+    setSaveMessage(undefined)
+    if (activeFile === 'up') {
+      setUpDraft(value)
+    } else {
+      setDownDraft(value)
+    }
+  }
+
+  function insertTableName(table: string) {
+    setActiveSQL(`${activeSQL}${activeSQL.endsWith(' ') || activeSQL.endsWith('\n') ? '' : ' '}${table}`)
+  }
 
   if (!token) {
     return <ErrorState message="API token is required. Save a token on the dashboard or settings page first." />
@@ -83,7 +117,7 @@ export function MigrationDetailPage() {
                 key={table}
                 className="flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1 text-left font-code-sm text-code-sm text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface"
                 type="button"
-                onClick={() => setSQLText(`${editorValue}${editorValue.endsWith(' ') || editorValue.endsWith('\n') ? '' : ' '}${table}`)}
+                onClick={() => insertTableName(table)}
               >
                 <span className="material-symbols-outlined text-[14px] text-primary">table</span>
                 {table}
@@ -94,32 +128,56 @@ export function MigrationDetailPage() {
       </aside>
 
       <section className="min-w-0 bg-surface-container-lowest">
-        <div className="flex items-center gap-unit-4 border-b border-outline-variant bg-surface-container-high px-unit-4 py-2">
+        <div className="flex flex-wrap items-center gap-unit-3 border-b border-outline-variant bg-surface-container-high px-unit-4 py-2">
           <input
             className="min-w-0 flex-1 border-none bg-transparent p-0 font-code-md text-code-md text-on-surface focus:ring-0"
             readOnly
-            value={migration.filename}
+            value={`${migration.filename}.${activeFile}.sql`}
           />
-          <select className="rounded border border-outline-variant bg-surface-container-high font-body-md text-sm text-on-surface focus:border-primary focus:ring-primary" defaultValue="migration">
-            <option value="migration">Migration</option>
-            <option value="hotfix">Hotfix</option>
-            <option value="data">Data</option>
-          </select>
+          <div className="flex rounded border border-outline-variant bg-surface-container-lowest p-0.5">
+            {(['up', 'down'] as const).map((fileType) => (
+              <button
+                key={fileType}
+                className={[
+                  'rounded px-3 py-1 font-label-caps text-label-caps uppercase transition-colors',
+                  activeFile === fileType ? 'bg-primary text-on-primary' : 'text-on-surface-variant hover:bg-surface-variant hover:text-on-surface',
+                ].join(' ')}
+                type="button"
+                onClick={() => setActiveFile(fileType)}
+              >
+                {fileType}.sql
+              </button>
+            ))}
+          </div>
           <span className="inline-flex items-center gap-unit-2 font-code-sm text-code-sm text-on-surface-variant">
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-container text-on-primary-container">
               {(migration.applied_by ?? 'L').slice(0, 1).toUpperCase()}
             </span>
             {migration.applied_by ?? 'local'}
           </span>
+          <button
+            className="rounded bg-primary px-3 py-1.5 font-label-caps text-label-caps font-bold uppercase text-on-primary transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+            disabled={!isDirty || saveMutation.isPending}
+            type="button"
+            onClick={() => saveMutation.mutate()}
+          >
+            {saveMutation.isPending ? 'Saving…' : 'Save Files'}
+          </button>
         </div>
+        {(saveMessage || saveMutation.error) ? (
+          <div className="border-b border-outline-variant bg-surface-container px-unit-4 py-2 font-body-md text-body-md">
+            {saveMessage ? <span className="text-secondary">{saveMessage}</span> : null}
+            {saveMutation.error instanceof Error ? <span className="text-error">{saveMutation.error.message}</span> : null}
+          </div>
+        ) : null}
         <CodeMirror
           basicSetup={{ lineNumbers: true, foldGutter: true }}
           className="min-h-[calc(100vh-10rem)] font-code-md text-code-md"
           extensions={[sql()]}
           height="calc(100vh - 10rem)"
           theme="dark"
-          value={editorValue}
-          onChange={setSQLText}
+          value={activeSQL}
+          onChange={setActiveSQL}
         />
       </section>
 
