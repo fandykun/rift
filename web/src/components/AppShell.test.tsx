@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createMigration, fetchMigrations } from '../lib/api'
 import { useAppStore } from '../stores/appStore'
@@ -15,6 +15,11 @@ vi.mock('../lib/api', async () => {
   }
 })
 
+function DiffRouteProbe() {
+  const location = useLocation()
+  return <div>Schema diff content {location.search}</div>
+}
+
 function renderShell(initialPath = '/migrations') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
@@ -24,7 +29,7 @@ function renderShell(initialPath = '/migrations') {
           <Route element={<AppShell />} path="/">
             <Route element={<div>Dashboard content</div>} path="migrations" />
             <Route element={<div>Migration detail</div>} path="migrations/:version" />
-            <Route element={<div>Schema diff content</div>} path="migrations/:version/diff" />
+            <Route element={<DiffRouteProbe />} path="migrations/:version/diff" />
           </Route>
         </Routes>
       </MemoryRouter>
@@ -108,5 +113,24 @@ describe('AppShell', () => {
       expect(createMigration).toHaveBeenCalledWith({ name: 'Add Billing Events' }, { token: 'token' })
     })
     expect(await screen.findByText('Migration detail')).not.toBeNull()
+  })
+
+  it('navigates header preview and apply buttons to the pending migration diff workflow', async () => {
+    renderShell()
+
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: /schema diff/i }).getAttribute('href')).toBe('/migrations/20260623_090500/diff')
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /preview changes/i }))
+    expect(await screen.findByText('Schema diff content')).not.toBeNull()
+
+    cleanup()
+    renderShell()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /apply migrations/i }).hasAttribute('disabled')).toBe(false)
+    })
+    fireEvent.click(screen.getByRole('button', { name: /apply migrations/i }))
+    expect(await screen.findByText('Schema diff content ?apply=1')).not.toBeNull()
   })
 })

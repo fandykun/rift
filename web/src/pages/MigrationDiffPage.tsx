@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { ErrorState } from '../components/ErrorState'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { SQLDiffPane } from '../components/SQLDiffPane'
@@ -11,10 +11,10 @@ import { useAppStore } from '../stores/appStore'
 
 export function MigrationDiffPage() {
   const { version } = useParams<{ version: string }>()
+  const [searchParams, setSearchParams] = useSearchParams()
   const token = useAppStore((state) => state.apiToken)
   const queryClient = useQueryClient()
   const [safePreview, setSafePreview] = useState(true)
-  const [modalOpen, setModalOpen] = useState(false)
   const [forceApply, setForceApply] = useState(false)
   const [events, setEvents] = useState<ApplyStreamEvent[]>([])
 
@@ -79,6 +79,19 @@ export function MigrationDiffPage() {
   const summary = summarizeDiff(diff)
   const localLines = buildLocalLines(migration.up_sql ?? '', diff)
   const liveLines = buildLiveLines(diff)
+  const modalOpen = searchParams.get('apply') === '1'
+
+  function openApplyModal() {
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set('apply', '1')
+    setSearchParams(nextParams, { replace: false })
+  }
+
+  function closeApplyModal() {
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete('apply')
+    setSearchParams(nextParams, { replace: true })
+  }
 
   return (
     <div className="-m-unit-8 flex h-[calc(100vh-3.5rem)] flex-col overflow-hidden bg-background">
@@ -112,7 +125,7 @@ export function MigrationDiffPage() {
           <button
             className="rounded bg-primary px-3 py-1.5 font-label-caps text-label-caps font-bold uppercase text-on-primary transition-colors hover:bg-primary/90 active:scale-95"
             type="button"
-            onClick={() => setModalOpen(true)}
+            onClick={openApplyModal}
           >
             Apply Migrations
           </button>
@@ -135,7 +148,7 @@ export function MigrationDiffPage() {
           forceApply={forceApply}
           warnings={warnings}
           onApply={() => applyMutation.mutate()}
-          onClose={() => setModalOpen(false)}
+          onClose={closeApplyModal}
           onForceApplyChange={setForceApply}
         />
       ) : null}

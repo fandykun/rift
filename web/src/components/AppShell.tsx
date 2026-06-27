@@ -72,7 +72,10 @@ export function AppShell() {
       void navigate(`/migrations/${migration.version}`)
     },
   })
-  const navItems = buildNavItems(pathname, migrationsQuery.data ?? [])
+  const migrations = migrationsQuery.data ?? []
+  const navItems = buildNavItems(pathname, migrations)
+  const schemaDiffPath = buildSchemaDiffPath(pathname, migrations)
+  const canPreviewChanges = Boolean(token && schemaDiffPath !== '/migrations')
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
@@ -148,10 +151,20 @@ export function AppShell() {
               <span className="material-symbols-outlined text-[18px]">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
               {theme === 'dark' ? 'Light' : 'Dark'} Mode
             </button>
-            <button className="rounded border border-outline-variant px-3 py-1.5 font-label-caps text-label-caps uppercase text-on-surface transition-colors hover:bg-surface-variant">
+            <button
+              className="rounded border border-outline-variant px-3 py-1.5 font-label-caps text-label-caps uppercase text-on-surface transition-colors hover:bg-surface-variant disabled:cursor-not-allowed disabled:opacity-40"
+              disabled={!canPreviewChanges}
+              type="button"
+              onClick={() => void navigate(schemaDiffPath)}
+            >
               Preview Changes
             </button>
-            <button className="rounded bg-primary px-3 py-1.5 font-label-caps text-label-caps font-bold uppercase text-on-primary transition-colors hover:bg-primary/90">
+            <button
+              className="rounded bg-primary px-3 py-1.5 font-label-caps text-label-caps font-bold uppercase text-on-primary transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+              disabled={!canPreviewChanges}
+              type="button"
+              onClick={() => void navigate(`${schemaDiffPath}?apply=1`)}
+            >
               Apply Migrations
             </button>
           </div>
