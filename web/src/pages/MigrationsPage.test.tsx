@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fetchLint, fetchMigrations, fetchStatus } from '../lib/api'
+import { fetchLint, fetchMigrations, fetchStatus, triggerDown } from '../lib/api'
 import { useAppStore } from '../stores/appStore'
 import { MigrationsPage } from './MigrationsPage'
 
@@ -13,6 +13,7 @@ vi.mock('../lib/api', async () => {
     fetchStatus: vi.fn(),
     fetchMigrations: vi.fn(),
     fetchLint: vi.fn(),
+    triggerDown: vi.fn(),
   }
 })
 
@@ -71,6 +72,7 @@ describe('MigrationsPage', () => {
         },
       ],
     })
+    vi.mocked(triggerDown).mockResolvedValue({ status: 'rolled-back', steps: 1 })
   })
 
   afterEach(() => {
@@ -129,5 +131,40 @@ describe('MigrationsPage', () => {
       expect(fetchLint).toHaveBeenCalledTimes(2)
     })
     expect(await screen.findByText('Synced 2 migrations · 1 lint finding')).not.toBeNull()
+  })
+
+  it('confirms and rolls back only the latest applied migration', async () => {
+    renderWithProviders()
+
+    await screen.findByText('create_widgets')
+    fireEvent.click(screen.getByRole('button', { name: /rollback create_widgets/i }))
+
+    expect(screen.getByRole('heading', { name: 'Rollback latest migration?' })).not.toBeNull()
+    expect(screen.getByText('20260620_180000_create_widgets.up.sql')).not.toBeNull()
+    expect(triggerDown).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm rollback' }))
+
+    await waitFor(() => {
+      expect(triggerDown).toHaveBeenCalledWith(1, 'token')
+      expect(fetchStatus).toHaveBeenCalledTimes(2)
+      expect(fetchMigrations).toHaveBeenCalledTimes(2)
+      expect(fetchLint).toHaveBeenCalledTimes(2)
+    })
+    expect(await screen.findByText('Rolled back create_widgets.')).not.toBeNull()
+  })
+
+  it('shows rollback errors without refreshing stale dashboard data', async () => {
+    vi.mocked(triggerDown).mockRejectedValue(new Error('down migration failed'))
+    renderWithProviders()
+
+    await screen.findByText('create_widgets')
+    fireEvent.click(screen.getByRole('button', { name: /rollback create_widgets/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm rollback' }))
+
+    expect(await screen.findByText('down migration failed')).not.toBeNull()
+    expect(fetchStatus).toHaveBeenCalledTimes(1)
+    expect(fetchMigrations).toHaveBeenCalledTimes(1)
+    expect(fetchLint).toHaveBeenCalledTimes(1)
   })
 })

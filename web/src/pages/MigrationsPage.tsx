@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQueries } from '@tanstack/react-query'
+import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query'
 import { DataTable } from '../components/DataTable'
 import { ErrorState } from '../components/ErrorState'
 import { LinterAlertsCard } from '../components/LinterAlertsCard'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { QuickActionsCard } from '../components/QuickActionsCard'
+import { RollbackMigrationModal } from '../components/RollbackMigrationModal'
 import { StatCard } from '../components/StatCard'
 import { StatusBadge } from '../components/StatusBadge'
-import { fetchLint, fetchMigrations, fetchStatus } from '../lib/api'
+import { fetchLint, fetchMigrations, fetchStatus, triggerDown } from '../lib/api'
 import type { LintResponse, Migration, StatusResponse } from '../lib/api'
 import { useAppStore } from '../stores/appStore'
 
@@ -16,12 +17,15 @@ const columns = ['Status', 'ID', 'Name', 'Author', 'Applied Date', 'Actions']
 
 export function MigrationsPage() {
   const token = useAppStore((state) => state.apiToken)
+  const queryClient = useQueryClient()
   const setApiToken = useAppStore((state) => state.setApiToken)
   const setEnvironmentName = useAppStore((state) => state.setEnvironmentName)
   const [draftToken, setDraftToken] = useState(token)
   const [searchTerm, setSearchTerm] = useState('')
   const [quickActionMessage, setQuickActionMessage] = useState<{ kind: 'connect' | 'sync' | 'error'; text: string }>()
   const [quickActionLoading, setQuickActionLoading] = useState<'connect' | 'sync'>()
+  const [rollbackMigration, setRollbackMigration] = useState<Migration>()
+  const [rollbackMessage, setRollbackMessage] = useState<string>()
 
   const [statusQuery, migrationsQuery, lintQuery] = useQueries({
     queries: [
@@ -47,6 +51,29 @@ export function MigrationsPage() {
   const rawMigrations = migrationsQuery.data as Migration[] | undefined
   const migrations = useMemo(() => rawMigrations ?? [], [rawMigrations])
   const lint = (lintQuery.data as LintResponse | undefined) ?? { error_count: 0, warning_count: 0, results: [] }
+  const latestAppliedMigration = useMemo(
+    () =>
+      migrations
+        .filter((migration) => migration.status === 'applied')
+        .reduce<Migration | undefined>((latest, migration) => (!latest || migration.version > latest.version ? migration : latest), undefined),
+    [migrations],
+  )
+  const rollbackMutation = useMutation({
+    mutationFn: () => triggerDown(1, token),
+    onMutate: () => setRollbackMessage(undefined),
+    onSuccess: async () => {
+      const rolledBackName = rollbackMigration ? migrationName(rollbackMigration) : 'migration'
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['status'] }),
+        queryClient.invalidateQueries({ queryKey: ['migrations'] }),
+        queryClient.invalidateQueries({ queryKey: ['lint'] }),
+        queryClient.invalidateQueries({ queryKey: ['history'] }),
+        queryClient.invalidateQueries({ queryKey: ['conflicts'] }),
+      ])
+      setRollbackMigration(undefined)
+      setRollbackMessage(`Rolled back ${rolledBackName}.`)
+    },
+  })
 
   useEffect(() => {
     if (status?.environment) {
@@ -149,6 +176,12 @@ export function MigrationsPage() {
         <StatCard icon="pending_actions" label="Pending" value={status?.counts.pending ?? 0} />
       </div>
 
+      {rollbackMessage ? (
+        <p className="mt-unit-4 rounded border border-secondary/30 bg-secondary-container/10 p-3 font-body-md text-body-md text-secondary" role="status">
+          {rollbackMessage}
+        </p>
+      ) : null}
+
       <div className="mt-unit-6 grid gap-unit-4 xl:grid-cols-12">
         <section className="xl:col-span-8">
           <div className="mb-unit-4 flex items-center justify-between gap-unit-4">
@@ -170,7 +203,12 @@ export function MigrationsPage() {
           {filteredMigrations.length > 0 ? (
             <DataTable columns={columns}>
               {filteredMigrations.map((migration) => (
-                <MigrationRow key={`${migration.version}-${migration.status}`} migration={migration} />
+                <MigrationRow
+                  key={`${migration.version}-${migration.status}`}
+                  canRollback={migration.version === latestAppliedMigration?.version}
+                  migration={migration}
+                  onRollback={setRollbackMigration}
+                />
               ))}
             </DataTable>
           ) : (
@@ -191,6 +229,19 @@ export function MigrationsPage() {
           <LinterAlertsCard results={lint.results} />
         </aside>
       </div>
+
+      {rollbackMigration ? (
+        <RollbackMigrationModal
+          error={rollbackMutation.error instanceof Error ? rollbackMutation.error.message : undefined}
+          isPending={rollbackMutation.isPending}
+          migration={rollbackMigration}
+          onCancel={() => {
+            rollbackMutation.reset()
+            setRollbackMigration(undefined)
+          }}
+          onConfirm={() => rollbackMutation.mutate()}
+        />
+      ) : null}
     </div>
   )
 }
@@ -224,8 +275,14 @@ function TokenPrompt({ draftToken, onDraftTokenChange, onSave }: TokenPromptProp
   )
 }
 
-function MigrationRow({ migration }: { migration: Migration }) {
-  const name = migration.filename.replace(`${migration.version}_`, '').replace(/\.up\.sql$/, '')
+type MigrationRowProps = {
+  migration: Migration
+  canRollback: boolean
+  onRollback: (migration: Migration) => void
+}
+
+function MigrationRow({ migration, canRollback, onRollback }: MigrationRowProps) {
+  const name = migrationName(migration)
 
   return (
     <tr className="bg-surface-container transition-colors hover:bg-surface-container-low">
@@ -246,10 +303,24 @@ function MigrationRow({ migration }: { migration: Migration }) {
           <Link className="font-label-caps text-label-caps uppercase text-tertiary hover:underline" to={`/migrations/${migration.version}/diff`}>
             Diff
           </Link>
+          {canRollback ? (
+            <button
+              aria-label={`Rollback ${name}`}
+              className="rounded border border-error/50 px-2 py-1 font-label-caps text-label-caps uppercase text-error hover:bg-error/10"
+              type="button"
+              onClick={() => onRollback(migration)}
+            >
+              Rollback
+            </button>
+          ) : null}
         </div>
       </td>
     </tr>
   )
+}
+
+function migrationName(migration: Migration): string {
+  return migration.filename.replace(`${migration.version}_`, '').replace(/\.up\.sql$/, '')
 }
 
 function EmptyMigrations() {
