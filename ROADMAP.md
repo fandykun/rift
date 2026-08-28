@@ -48,6 +48,8 @@ Rift has a working MVP for self-hosted PostgreSQL migration management:
 - Team/deployment page with conflicts, history, and team access
 - Settings page with token persistence and connection status
 - New Migration modal that creates timestamped migration file pairs through the authenticated API
+- SQL editor persistence for pending `up.sql` and `down.sql` files
+- Confirmed rollback of the latest applied migration from the dashboard, with post-rollback data refresh
 
 ### Deployment
 
@@ -59,7 +61,6 @@ Rift has a working MVP for self-hosted PostgreSQL migration management:
 
 ## In Progress
 
-- Improve web-based SQL editing and save behavior
 - Polish migration creation templates for common PostgreSQL changes
 - Improve public demo screenshots and documentation
 - Tighten deployment examples for different hosting targets

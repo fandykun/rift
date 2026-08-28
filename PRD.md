@@ -125,6 +125,7 @@ The dashboard is a dark-themed, developer-focused SPA. The visual design system 
 - Three stat cards across the top: Total Migrations, Applied (emerald), Pending (with electric-blue pulsing glow when > 0)
 - "Recent Activity" table: STATUS | ID (Timestamp) | NAME | AUTHOR | APPLIED DATE | ACTIONS
 - Status column uses colored chips: Applied (emerald), Pending (neutral), Pending+Linter-Error (red-tinted with warning icon), Failed (red)
+- The latest actively applied migration exposes a **Rollback** action. Rift shows a destructive confirmation modal naming the exact migration, rolls back one step through `POST /api/v1/migrate/down`, and refreshes status, migrations, lint, history, and conflicts after success. Older applied rows do not expose a misleading targeted rollback action because v1 rollback is strictly stack-ordered.
 - Right sidebar: "Quick Actions" card (Connect to DB, Sync Local Files) + "Linter Alerts" card showing any dangerous pending migrations
 - Search input for filtering the migration table by name or version
 
